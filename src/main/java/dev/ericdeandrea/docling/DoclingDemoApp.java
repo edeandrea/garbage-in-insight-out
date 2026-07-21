@@ -1,7 +1,7 @@
-package dev.ericdeandrea.docling.chat;
+package dev.ericdeandrea.docling;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-class ChatApp {
+class DoclingDemoApp {
 }

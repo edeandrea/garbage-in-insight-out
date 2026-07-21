@@ -9,10 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        module: [ingestion, chat]
-    name: Build ${{ matrix.module }}
+    name: Build
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -23,4 +20,4 @@ jobs:
           java-version: '25'
           cache: maven
       - name: Build and test
-        run: ./mvnw -B -f ${{ matrix.module }} verify
+        run: ./mvnw -B verify

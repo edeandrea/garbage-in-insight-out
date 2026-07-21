@@ -1,4 +1,4 @@
-package dev.ericdeandrea.docling.chat;
+package dev.ericdeandrea.docling;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,12 +7,12 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class ChatAppTest {
+class DoclingDemoAppTest {
     @Inject
-    ChatApp chatApp;
+    DoclingDemoApp app;
 
     @Test
     void appStarts() {
-        assertThat(chatApp).isNotNull();
+        assertThat(app).isNotNull();
     }
 }

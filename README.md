@@ -14,13 +14,6 @@ Demo application for the talk *"Garbage In, Insight Out: Document Intelligence f
 ./mvnw verify
 ```
 
-## Modules
-
-| Module | Description |
-|--------|-------------|
-| [`ingestion/`](ingestion/) | Pre-demo ingestion pipeline that extracts, chunks, embeds, and stores documents into vector indices. |
-| [`chat/`](chat/) | Live-demo Quarkus web application serving the RAG chatbot UI. |
-
 ## Fixtures
 
 The `fixtures/` directory contains demo documents used for ingestion:

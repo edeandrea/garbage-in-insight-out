@@ -5,11 +5,8 @@ built and maintained by the docling-java / quarkus-docling project lead.
 
 ## Tech stack & conventions
 
-- Build: Maven, multi-module. New capabilities should extend the module
-  map defined in `specs/000-project-skeleton/`, not invent ad hoc
-  structure. If a new feature doesn't fit any existing module, that's a
-  signal to propose a new module in that feature's plan phase, not to
-  bolt it onto an unrelated one.
+- Build: Maven, single-module Quarkus application. Different concerns
+  (ingestion, chat, etc.) are separated by package, not by module.
 - Language: Java 25
 - Primary: Quarkus + LangChain4j (this is the main live demo)
 - Secondary: a short Spring AI code sample only, for a slide/screen flash,
@@ -32,7 +29,7 @@ built and maintained by the docling-java / quarkus-docling project lead.
 
 ## Bootstrapping
 
-Spec 000 (project skeleton: Maven multi-module layout, Dependabot
+Spec 000 (project skeleton: Maven project layout, Dependabot
 configuration, and a baseline GitHub Actions CI workflow) must exist and
 be Approved before any other spec moves past the planning phase. It's
 foundational, everything else is built inside the structure it defines,
@@ -44,6 +41,13 @@ as any feature, it isn't exempt just because it's plumbing.
 - Never auto-commit. Always ask the user for approval before running
   `git commit`, even during `/spec-implement` or other multi-step
   workflows. After the user approves, push immediately.
+
+## Design decisions
+
+- Never assume. If anything is ambiguous — a technology choice, a
+  configuration value, an API approach — ask for clarity rather than
+  picking a default and moving forward. This applies to specs, plans,
+  and implementation alike.
 
 ## Non-goals (apply to every feature, not just the first)
 
@@ -78,8 +82,7 @@ phase, on purpose, so specs survive across sessions and context resets.
 
 ## Active specs
 
-- `specs/000-project-skeleton/` — Maven multi-module layout. Not yet
-  created, run `/spec-new project-skeleton` first, before anything else.
+- `specs/000-project-skeleton/` — Maven project layout, CI, Dependabot.
+  Status: Approved, implemented. Being updated to single-module structure.
 - `specs/001-three-mode-rag-demo/` — the core cold-open/verdict/advanced
-  RAG demo. Status: Draft, needs review before planning starts. Depends
-  on spec 000 being Approved.
+  RAG demo. Status: Approved, plan in progress.
