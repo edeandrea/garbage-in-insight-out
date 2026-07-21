@@ -1,6 +1,6 @@
 # Spec 001: Three-Mode RAG Demo
 
-Status: Draft
+Status: Approved
 
 ## Summary
 
@@ -50,6 +50,9 @@ Three demo beats, same app throughout:
    constant) does not satisfy this requirement.
 7. Ingestion code must be simple/readable enough to show on screen on its
    own, separately from the chat demo.
+8. The LLM and embedding model must be accessed via a configurable
+   OpenAI-compatible API endpoint, supporting both cloud providers
+   (OpenAI, etc.) and local servers (Ollama, etc.) without code changes.
 
 ### Planted questions, Set 1 (Mode A vs. B, verified against real naive
 extraction via `pdftotext`, do not change without re-verifying):
@@ -85,6 +88,8 @@ is the strongest single exhibit if only one is used.
 
 - Re-ingesting live during the on-stage demo (indices are pre-built)
 - Any UI polish or branding beyond a functional chat + retrieved-chunks view
+- The `docling.pptx` fixture — it exists in the repo as reference
+  material the author may pull from, but is not used by this spec
 
 ## Open questions
 
