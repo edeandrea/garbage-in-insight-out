@@ -44,7 +44,10 @@ Three demo beats, same app throughout:
 6. UI: a simple chat interface. Must show retrieved chunks alongside the
    generated answer, not just the final answer, this is the visual proof
    of the thesis, not just an assertion. Must support switching between
-   modes (A/B/C) without restarting the app.
+   modes (A/B/C) live, at runtime, through the UI itself, without editing,
+   recompiling, or hot-reloading any application code, a restart-free but
+   code-edit-triggered reload (e.g. Quarkus dev mode picking up a changed
+   constant) does not satisfy this requirement.
 7. Ingestion code must be simple/readable enough to show on screen on its
    own, separately from the chat demo.
 
