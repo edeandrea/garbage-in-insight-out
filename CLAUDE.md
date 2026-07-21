@@ -36,6 +36,12 @@ foundational, everything else is built inside the structure it defines,
 so it goes through the same spec -> plan -> tasks -> implement discipline
 as any feature, it isn't exempt just because it's plumbing.
 
+## Git workflow
+
+- Never auto-commit. Always ask the user for approval before running
+  `git commit`, even during `/spec-implement` or other multi-step
+  workflows. After the user approves, push immediately.
+
 ## Non-goals (apply to every feature, not just the first)
 
 - No need to explain or expose Docling's internal model architecture
