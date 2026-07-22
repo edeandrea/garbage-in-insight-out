@@ -523,7 +523,19 @@ structure. Don't assume a layout; ask first.
 
 ---
 
-## 36. [2026-07-22 13:48 EDT]: Vaadin 25.2.3
+## 36. [2026-07-22 13:48 EDT]: RagConfig defaults
+
+**Question:** What default values for `maxTokens` and `overlap` in the
+`@ConfigMapping` for the sentence splitter?
+
+**Decision:** Default `maxTokens=300`, `overlap=30` as reasonable
+starting points. These will be tuned during task 12 (chunk size
+validation). `topK=4` and `fixturePath=fixtures/doclaynet-2206.01062v1.pdf`
+as specified in earlier decisions.
+
+---
+
+## 37. [2026-07-22 13:48 EDT]: Vaadin 25.2.3
 
 **Question:** Which Vaadin version? Project uses Java 25, and
 `browserless-test-quarkus` requires Vaadin 25.1+.
@@ -568,3 +580,14 @@ globally via `-Amapstruct.defaultComponentModel=cdi` in
 approach is too hidden. Explicit annotation on each mapper makes the
 intent visible at the point of use. Remove `-Amapstruct.defaultComponentModel=cdi`
 from the compiler plugin config.
+
+---
+
+## 40. [2026-07-22 15:24 EDT]: Use generic naming for document parameters
+
+**Question:** Should method parameters referencing the input document
+be named `pdfPath`/`pdfFile` or something more generic?
+
+**Decision:** Use generic names like `documentToProcess` or
+`documentPath`. The pipeline may support formats beyond PDF in the
+future, and the naming should reflect the actual abstraction level.

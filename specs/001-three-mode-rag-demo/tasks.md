@@ -61,7 +61,7 @@ Status: Approved
       `fixtures/doclaynet-2206.01062v1.pdf`). Write a `@QuarkusTest` that
       injects the config and verifies defaults are applied.
 
-- [ ] 7. **Implement ExtractionStrategy interface and TikaExtractor** —
+- [x] 7. **Implement ExtractionStrategy interface and TikaExtractor** —
       Create the `dev.ericdeandrea.docling.ai.ingestion` package. Define
       `ExtractionStrategy` interface returning an `ExtractionResult` record
       (lives in `ai.ingestion` — internal type, not a boundary type, since
@@ -71,7 +71,7 @@ Status: Approved
       the fixture PDF with Tika and asserts the result has non-empty text
       and no provenance.
 
-- [ ] 8. **Implement DoclingExtractor (conversion endpoint, Mode B)** —
+- [x] 8. **Implement DoclingExtractor (conversion endpoint, Mode B)** —
       Implement `DoclingExtractor` using `DoclingServeApi` directly. For
       Mode B, call the conversion endpoint to get raw `DoclingDocument`
       JSON. Convert to a LangChain4j `Document` (clean text) and build a
@@ -80,7 +80,7 @@ Status: Approved
       `@QuarkusTest` (needs Docling dev services) that converts the
       fixture PDF and asserts provenance metadata is present.
 
-- [ ] 9. **Extend DoclingExtractor for hybrid chunking (Mode C)** — Add
+- [x] 9. **Extend DoclingExtractor for hybrid chunking (Mode C)** — Add
       Mode C support as a single extract+chunk step: call the Docling Serve
       chunking endpoint (`/v1alpha/convert/chunked/file`, `type=hybrid`).
       Map pre-chunked results directly to `TextSegment`s with provenance

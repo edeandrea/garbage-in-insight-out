@@ -212,3 +212,93 @@ Add `rag` section with defaults.
 ### Test
 
 `@QuarkusTest` that injects `RagConfig` and asserts defaults.
+
+---
+
+## Task 7: Implement ExtractionStrategy and TikaExtractor
+
+### Package
+
+`dev.ericdeandrea.docling.ai.ingestion`
+
+### Classes
+
+- `ExtractionResult` — record holding a LangChain4j `Document` + an
+  optional provenance map (`Map<String, ProvenanceEntry>` or similar).
+  Internal AI-layer type, not a boundary type
+  ([decision 23](decisions.md)).
+- `ExtractionStrategy` — interface: `ExtractionResult extract(Path documentPath)`
+- `TikaExtractor` — CDI bean wrapping `ApacheTikaDocumentParser`. Parses
+  the PDF, returns `ExtractionResult` with the `Document` and empty
+  provenance (Mode A has no page tracking).
+
+### Test
+
+`@QuarkusTest` that injects `TikaExtractor`, extracts the fixture PDF,
+asserts the result has non-empty text and empty provenance.
+
+---
+
+## Task 8: Implement DoclingExtractor (conversion endpoint, Mode B)
+
+### API calls
+
+Use `DoclingService.convertFile(path, OutputFormat.JSON)` which returns
+`InBodyConvertDocumentResponse`. Access `document.jsonContent` to get
+the `DoclingDocument` Java object.
+
+### Building the provenance map
+
+Iterate over the `DoclingDocument`'s text items (body items). Each has:
+- `List<ProvenanceItem> prov` → `pageNo`, `charspan`
+- A label from `DocItemLabel` enum (TABLE, PARAGRAPH, CAPTION, etc.)
+
+Build `List<ProvenanceEntry>` from these, mapping `charspan[0]`/`[1]`
+to `startChar`/`endChar`.
+
+### Element labels
+
+Tables and figures may have labels like "Table 2" or "Figure 3" that
+need to be extracted from the item's text content or captions. The
+exact API for this depends on how `DoclingDocument` structures
+table/figure items — check during implementation.
+
+### Provenance map scope
+
+The provenance map is used by `NaiveChunker` (task 10) to post-process
+segments. It maps character ranges in the extracted text to page/element
+metadata.
+
+### Test
+
+`@QuarkusTest` (needs Docling dev services) that converts the fixture
+PDF and asserts provenance entries exist with page numbers.
+
+---
+
+## Task 9: Extend DoclingExtractor for hybrid chunking (Mode C)
+
+### API call
+
+Use `DoclingService.chunkFileHybrid(path, OutputFormat.JSON)` which
+returns `ChunkDocumentResponse`. Each `Chunk` has:
+- `text` — chunk text with structural context
+- `pageNumbers` — `List<Integer>` of pages this chunk spans
+- `headings` — section headings
+- `captions` — captions for tables/pictures
+- `docItems` — doc item references
+
+### Approach
+
+Add a `extractAndChunk(Path)` method to `DoclingExtractor` that returns
+`List<TextSegment>` directly (bypasses `ChunkingStrategy` — [decision
+19](decisions.md)). Each `TextSegment` gets metadata:
+- `page_number` — first page from `chunk.pageNumbers`
+- `element_type` — inferred from chunk content/docItems
+- `element_label` — from captions if present
+- `mode` — `DOCLING_HYBRID_CHUNK`
+
+### Test
+
+`@QuarkusTest` that chunks the fixture PDF via Docling and asserts
+chunks are returned with page metadata.
