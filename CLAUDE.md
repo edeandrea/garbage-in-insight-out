@@ -48,6 +48,22 @@ as any feature, it isn't exempt just because it's plumbing.
   configuration value, an API approach — ask for clarity rather than
   picking a default and moving forward. This applies to specs, plans,
   and implementation alike.
+- **Don't test simple POJOs:** Don't write tests for records, enums,
+  value objects, or other simple data-carrying types. The compiler
+  enforces their shape. Reserve tests for behavior and logic.
+- **Quarkus profile config:** When dev and test profiles share the same
+  value, use `%dev,test` combined syntax rather than duplicating the
+  config across separate `%dev` and `%test` entries.
+- Capture design questions, their decisions, and reasoning about the
+  decisions in a `decisions.md` in the spec directory. This is a
+  lightweight architectural decision record (ADR) — modeled after
+  Michael Nygard's ADR format but kept in one chronological file per
+  spec rather than one file per decision. Entries are timestamped and
+  formatted as:
+  `## <number>. [YYYY-MM-DD HH:MM <timezone>]: <description>`.
+  Use the machine's actual timezone (e.g., `date "+%Z"`). Include the
+  question that prompted the decision, options considered, and the
+  chosen approach.
 
 ## Non-goals (apply to every feature, not just the first)
 

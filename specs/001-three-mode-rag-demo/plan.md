@@ -42,6 +42,8 @@ All code lives in one module, separated by package:
   selection (LangChain4j / Quarkus LangChain4j code)
 - `dev.ericdeandrea.docling.ai.ingestion` — extraction and chunking
   strategies (presentable on screen, spec requirement 7)
+- `dev.ericdeandrea.docling.mapping` — MapStruct mappers (CDI component
+  model) bridging between LangChain4j types and application value objects
 - `dev.ericdeandrea.docling.model` — purpose-built value objects
   (records) shared between the AI and UI layers. No LangChain4j or
   Quarkus-specific types cross the package boundary.
@@ -49,9 +51,9 @@ All code lives in one module, separated by package:
 
 The AI and UI layers are decoupled via the `model` package.
 LangChain4j types (`TextSegment`, `ChatEvent`, `EmbeddingStore`, etc.)
-never cross into the UI layer. MapStruct mappers (CDI component model)
-handle conversion between LangChain4j types and the application's value
-objects at the AI layer boundary.
+never cross into the UI layer. MapStruct mappers in the `mapping`
+package handle conversion — they sit at the boundary, not owned by
+either side.
 
 ## Quarkus extensions and dependencies
 
