@@ -114,7 +114,7 @@ Status: Approved
        strategy. Write a `@QuarkusTest` verifying the ingestion guard
        skips re-ingestion when the table has data.
 
-- [ ] 12. **Chunk size validation (Table 2 fragmentation)** — Extract the
+- [x] 12. **Chunk size validation (Table 2 fragmentation)** — Extract the
        fixture PDF with Docling, locate Table 2, measure its token length.
        Set `maxTokens` so the sentence splitter fragments Table 2. Write
        `@QuarkusTest`s that exercise the full retrieval path (embed planted

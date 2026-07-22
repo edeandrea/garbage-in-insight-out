@@ -696,3 +696,64 @@ ingest. Eliminates the `hasData()` zero-vector search hack.
 **Revised (from Eric):** Check collection existence as the ingestion
 guard. No need for a separate `hasData()` method — the collection's
 existence IS the guard.
+
+---
+
+## 47. [2026-07-22 16:52 EDT]: Task 12 chunk validation via diagnostic test
+
+**Question:** How to approach the chunk size validation (spec's open
+question about Table 2)? This requires trial and error, not a one-shot
+implementation.
+
+**Decision:** Write a diagnostic `@QuarkusTest` that extracts the
+fixture PDF, chunks it with both NaiveChunker and Docling hybrid, and
+prints detailed output about Table 2 — chunk boundaries, token lengths,
+which chunks contain Table 2 content. Review the output interactively
+and tune `maxTokens` until Table 2 is fragmented in Mode B and intact
+in Mode C.
+
+---
+
+## 48. [2026-07-22 17:17 EDT]: Chunk size validation results — maxTokens=300 confirmed
+
+**Investigation method:**
+
+1. Wrote `ChunkSizeSimulationTest` to extract the fixture PDF with
+   Docling and run the sentence splitter at maxTokens 100/150/200/250/300.
+   Searched for chunks containing Table 2's key values (76.8, 73.4).
+
+2. Found that 76.8 and 73.4 are on the same row
+   (`All | 82-83 | 72.4 | 73.5 | 73.4 | 76.8`, ~45 chars) and the
+   sentence splitter never splits within a row at any chunk size. The
+   original hypothesis (row fragmentation) does not hold.
+
+3. However, discovered a more interesting fragmentation: the **column
+   headers** (MRCNN R50, MRCNN R101, FRCNN R101, YOLOv5x6) are in a
+   different chunk from the data values. Mode B gets `73.4 | 76.8` but
+   the LLM doesn't know which value is FRCNN vs YOLO.
+
+4. Wrote `ModeAvsModeBTest` to compare all three modes:
+   - **Mode A (Tika):** Table data has unrelated body text spliced in
+     ("to avoid this at any cost..."), no pipe separators, no column
+     headers, no metadata. Garbled.
+   - **Mode B (Docling + naive chunker):** Pipe separators preserved,
+     no unrelated text spliced in, but column headers separated from
+     values. Has page/element metadata in retrieval panel.
+   - **Mode C (Docling hybrid):** Self-describing triplets
+     (`All, FRCNN.R101 = 73.4. All, YOLO.v5x6 = 76.8`). Column names
+     inline with values. LLM can answer from this chunk alone.
+
+**Finding:** The three-step demo progression is:
+- A → garbled text, no metadata — LLM can't answer
+- B → clean text, structural metadata — LLM struggles (column headers
+  separated from values)
+- C → self-describing triplets, structural metadata — LLM answers
+  correctly
+
+This is a stronger, more realistic exhibit than artificial row
+splitting. The "column header separation" failure mode is common in
+real-world RAG with tabular data.
+
+**Decision:** Keep `maxTokens=300`, `overlap=30`. No change needed.
+The demo thesis holds at this chunk size with a better narrative than
+originally hypothesized.

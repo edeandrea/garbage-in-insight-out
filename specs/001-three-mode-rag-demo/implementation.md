@@ -363,3 +363,52 @@ CDI bean that runs at startup. For each mode:
 
 `@QuarkusTest` that verifies the ingestion guard skips re-ingestion
 when the store has data.
+
+---
+
+## Task 12: Chunk size validation (Table 2 fragmentation)
+
+### Investigation method
+
+Wrote diagnostic tests to extract the fixture PDF and inspect how
+Table 2 content appears in each mode's chunks:
+
+1. **`ChunkSizeSimulationTest`** — ran the sentence splitter at
+   maxTokens 100/150/200/250/300, searched for chunks containing
+   Table 2's key values (76.8, 73.4).
+
+2. **`ModeAvsModeBTest`** — compared Mode A (Tika) and Mode B
+   (Docling + same chunker) side by side, looking at chunks containing
+   Table 2 markers.
+
+### Findings
+
+**Original hypothesis did not hold:** The sentence splitter never
+fragments the `All` row (`All | 82-83 | 72.4 | 73.5 | 73.4 | 76.8`,
+~45 chars) at any chunk size. Sentence boundaries don't fall within
+pipe-separated table rows.
+
+**Better fragmentation found:** Column headers (MRCNN R50, MRCNN R101,
+FRCNN R101, YOLOv5x6) are in a different chunk from the data values.
+Mode B gets `73.4 | 76.8` but the LLM doesn't know which value is
+FRCNN vs YOLO — the column-header-to-value relationship is broken.
+
+### Three-mode progression
+
+| Mode | Table 2 chunk content | Metadata | LLM can answer? |
+|------|----------------------|----------|-----------------|
+| A (Tika) | Garbled: values run together, unrelated body text spliced in, no pipe separators | None | No |
+| B (Docling + naive) | Clean pipe-separated values, but column headers in a different chunk | page 6, TABLE | No — doesn't know which value is FRCNN vs YOLO |
+| C (Docling hybrid) | Self-describing triplets: `All, FRCNN.R101 = 73.4. All, YOLO.v5x6 = 76.8` | page 6 | Yes — column names inline with values |
+
+### Decision
+
+Keep `maxTokens=300`, `overlap=30`. The column-header separation
+failure mode is more realistic and common than artificial row splitting.
+See [decision 48](decisions.md) for the full rationale.
+
+### Diagnostic test files
+
+- `src/test/java/.../ChunkSizeSimulationTest.java` — chunk size sweep
+- `src/test/java/.../ChunkSizeValidationTest.java` — initial Table 2 inspection
+- `src/test/java/.../ModeAvsModeBTest.java` — A vs B comparison
