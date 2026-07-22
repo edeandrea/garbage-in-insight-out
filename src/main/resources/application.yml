@@ -1,0 +1,38 @@
+quarkus:
+  langchain4j:
+    chat-model:
+      provider: openai
+    embedding-model:
+      provider: openai
+    openai:
+      base-url: http://localhost:11434/v1
+      api-key: none
+      chat-model:
+        model-name: qwen3:30b-a3b
+        temperature: 0
+      embedding-model:
+        model-name: nomic-embed-text
+    pgvector:
+      default-store-enabled: false
+      naive:
+        table: naive
+        dimension: 768
+      docling-naive:
+        table: docling_naive_chunk
+        dimension: 768
+      docling-hybrid:
+        table: docling_hybrid_chunk
+        dimension: 768
+
+"%dev,test":
+  quarkus:
+    langchain4j:
+      chat-model:
+        provider: ollama
+      embedding-model:
+        provider: ollama
+      ollama:
+        chat-model:
+          model-id: qwen3:30b-a3b
+        embedding-model:
+          model-id: nomic-embed-text

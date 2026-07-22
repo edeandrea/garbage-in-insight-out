@@ -5,13 +5,18 @@ Given a spec slug:
 
 1. Read `specs/<slug>/tasks.md`. If Status is not `Approved`, stop and ask
    the user to approve it first.
-2. Work through unchecked tasks in order. For each: implement it, add or
-   update tests covering the behavior this task introduces or changes
-   (per CLAUDE.md's testing rule, running the pre-existing suite alone is
-   not enough), run the full build/test suite, then mark it `- [x]` in
-   tasks.md only once everything passes and the new behavior is actually
-   covered.
+2. Work through unchecked tasks in order. For each task:
+   a. Before implementing, write the implementation approach to
+      `specs/<slug>/implementation.md` (keyed by task number).
+   b. Implement the task.
+   c. Add or update tests covering the behavior this task introduces or
+      changes (per CLAUDE.md's testing rule, running the pre-existing
+      suite alone is not enough).
+   d. Run the full build/test suite.
+   e. Mark it `- [x]` in tasks.md only once everything passes and the
+      new behavior is actually covered.
 3. If a task turns out to need a design decision not covered by plan.md,
-   stop and ask rather than improvising, and suggest updating plan.md.
+   stop and ask rather than improvising. Record the decision in
+   `specs/<slug>/decisions.md` and suggest updating plan.md if needed.
 4. When all tasks are checked, summarize what was built and note anything
    that deviated from the plan.

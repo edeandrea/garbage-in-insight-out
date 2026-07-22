@@ -520,3 +520,51 @@ Vaadin layouts?
 options to the user before writing code — panel arrangement, chunks
 display placement, toolbar for add/remove buttons, overall page
 structure. Don't assume a layout; ask first.
+
+---
+
+## 36. [2026-07-22 13:48 EDT]: Vaadin 25.2.3
+
+**Question:** Which Vaadin version? Project uses Java 25, and
+`browserless-test-quarkus` requires Vaadin 25.1+.
+
+**Decision:** Vaadin 25.2.3 (latest stable 25.x). Java 21+ required
+(project has 25). Enables browserless testing framework.
+
+---
+
+## 37. [2026-07-22 13:50 EDT]: quarkus-docling 1.4.0
+
+**Question:** Which version of `quarkus-docling`? Research agent
+reported 1.3.0 but earlier discussion said 1.4.0.
+
+**Decision:** 1.4.0 — confirmed on
+[Maven Central](https://central.sonatype.com/search?q=a:quarkus-docling).
+Always use central.sonatype.com or GitHub releases as the source of
+record for dependency versions, not web search results.
+
+---
+
+## 38. [2026-07-22 13:54 EDT]: Implementation details persisted in implementation.md
+
+**Question:** Should implementation plans for each task be captured in
+version control rather than the ephemeral plan file?
+
+**Decision:** Create `specs/<slug>/implementation.md` to capture
+implementation details per task (coordinates, config, approach). Entries
+keyed by task number, persisted alongside tasks.md and decisions.md.
+Update CLAUDE.md and the `/spec-implement` command to include this.
+
+---
+
+## 39. [2026-07-22 13:59 EDT]: MapStruct CDI component model on @Mapper, not compilerArgs
+
+**Question:** Should the MapStruct CDI component model be configured
+globally via `-Amapstruct.defaultComponentModel=cdi` in
+`maven-compiler-plugin`, or per-mapper via
+`@Mapper(componentModel = MappingConstants.ComponentModel.CDI)`?
+
+**Decision:** Per-mapper on the `@Mapper` annotation. The compiler arg
+approach is too hidden. Explicit annotation on each mapper makes the
+intent visible at the point of use. Remove `-Amapstruct.defaultComponentModel=cdi`
+from the compiler plugin config.

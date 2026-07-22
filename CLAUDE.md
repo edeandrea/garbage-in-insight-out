@@ -84,7 +84,8 @@ command:
 2. `/spec-plan <slug>` — technical design. Writes `specs/<slug>/plan.md`.
 3. `/spec-tasks <slug>` — ordered checklist. Writes `specs/<slug>/tasks.md`.
 4. `/spec-implement <slug>` — implementation, one task at a time, checking
-   off `tasks.md` as it goes.
+   off `tasks.md` as it goes. Writes implementation details per task to
+   `specs/<slug>/implementation.md`.
 
 Each phase file starts with a `Status:` field (`Draft` / `Approved`). Do
 not advance to the next phase, and do not write code, until the current

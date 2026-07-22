@@ -4,7 +4,7 @@ Status: Approved
 
 ## Checklist
 
-- [ ] 1. **Add POM dependencies** — Add all extension dependencies to
+- [x] 1. **Add POM dependencies** — Add all extension dependencies to
       `pom.xml`: `quarkus-langchain4j-openai`, `quarkus-langchain4j-pgvector`,
       `quarkus-docling`, `langchain4j-document-parser-apache-tika` (from the
       Quarkus LangChain4j BOM), `quarkus-langchain4j-ollama` (scope
@@ -15,7 +15,7 @@ Status: Approved
       (`mapstruct` + `mapstruct-processor` with CDI component model
       configured in the compiler plugin). Verify `./mvnw compile` succeeds.
 
-- [ ] 2. **Update CI workflow with Ollama service container** — Add an
+- [x] 2. **Update CI workflow with Ollama service container** — Add an
       Ollama service container to `.github/workflows/build.yml` (see
       `github.com/cescoffier/langchain4j-deep-dive` for the pattern). Pull
       `qwen3:4b` (lighter CI model) and `nomic-embed-text` in a pre-build
@@ -25,7 +25,7 @@ Status: Approved
       retrieval, not generation quality, so a lighter model is sufficient
       for CI. Verify the workflow syntax is valid.
 
-- [ ] 3. **Add application.yml configuration** — Replace
+- [x] 3. **Add application.yml configuration** — Replace
       `src/main/resources/application.properties` with `application.yml`.
       Configure: OpenAI-compatible LLM config (base-url pointing to Ollama
       `/v1`, api-key `none`, model-name `qwen3:30b-a3b`, embedding model
@@ -37,7 +37,7 @@ Status: Approved
       `openai` in the default profile (uses the OpenAI-compatible
       endpoint). Verify `./mvnw compile` still succeeds.
 
-- [ ] 4. **Create Mode enum and model package value objects** — Create the
+- [x] 4. **Create Mode enum and model package value objects** — Create the
       `dev.ericdeandrea.docling.model` package. Implement `Mode` enum with
       three values (`NAIVE`, `DOCLING_NAIVE_CHUNK`, `DOCLING_HYBRID_CHUNK`),
       each mapping to its pgvector store name and a display label. Create
@@ -46,7 +46,7 @@ Status: Approved
       (text, metadata). These are the boundary types — no LangChain4j types.
       No tests needed — these are simple data-carrying types.
 
-- [ ] 5. **Create MapStruct mapper skeleton** — Create a MapStruct mapper
+- [x] 5. **Create MapStruct mapper skeleton** — Create a MapStruct mapper
       interface in `dev.ericdeandrea.docling.mapping` (CDI component model) that
       maps from LangChain4j `TextSegment` + metadata to the model package's
       `RetrievedChunk`/`ChunkMetadata` records. Write unit tests verifying
@@ -54,7 +54,7 @@ Status: Approved
       `element_type`, `element_label`, `mode`) from a `TextSegment`'s
       `Metadata` into a `ChunkMetadata` record.
 
-- [ ] 6. **Create retrieval config mapping** — Create a `@ConfigMapping`
+- [x] 6. **Create retrieval config mapping** — Create a `@ConfigMapping`
       interface in `dev.ericdeandrea.docling.ai` for app-specific retrieval
       configuration (top-k with default 4, maxTokens and overlap for the
       sentence splitter, fixture PDF path defaulting to

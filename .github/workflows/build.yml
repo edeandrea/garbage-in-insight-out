@@ -10,6 +10,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Build
+    services:
+      ollama:
+        image: ollama/ollama
+        ports:
+          - 11434:11434
+        options: --name ollama --rm
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -19,5 +25,11 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+      - name: Pull Ollama models
+        run: |
+          docker exec ollama bash -c "\
+          ollama pull qwen3:4b && \
+          ollama pull nomic-embed-text && \
+          ollama ls"
       - name: Build and test
-        run: ./mvnw -B verify
+        run: ./mvnw -B verify -Dquarkus.langchain4j.openai.chat-model.model-name=qwen3:4b
