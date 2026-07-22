@@ -757,3 +757,25 @@ real-world RAG with tabular data.
 **Decision:** Keep `maxTokens=300`, `overlap=30`. No change needed.
 The demo thesis holds at this chunk size with a better narrative than
 originally hypothesized.
+
+---
+
+## 49. [2026-07-22 17:24 EDT]: Track PR #2691 — Qdrant Dev Services create-collections
+
+**Context:** Eric opened
+[PR #2691](https://github.com/quarkiverse/quarkus-langchain4j/pull/2691)
+which adds a `create-collections` flag to Qdrant Dev Services. When
+enabled, dev services auto-create collections for all named stores
+and propagate the resolved collection name into runtime config.
+
+**Impact if merged:**
+- Remove manual `QdrantClient` collection creation from
+  `IngestionStartup` (the `ensureCollectionsExist()` method)
+- Simplify `application.yml` — no need for both `collection-name`
+  (build-time) and `collection.name` (runtime) per named store
+- `IngestionStartup` would only need a collection-existence check for
+  the ingestion guard, not collection creation
+
+**Action:** Monitor PR status. If merged before we resume
+implementation, refactor `IngestionStartup` to remove manual collection
+creation and update `application.yml`.
