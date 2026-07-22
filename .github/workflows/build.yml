@@ -32,4 +32,4 @@ jobs:
           ollama pull nomic-embed-text && \
           ollama ls"
       - name: Build and test
-        run: ./mvnw -B verify -Dquarkus.langchain4j.openai.chat-model.model-name=qwen3:4b
+        run: ./mvnw -B verify -Dquarkus.langchain4j.ollama.chat-model.model-id=qwen3:4b
