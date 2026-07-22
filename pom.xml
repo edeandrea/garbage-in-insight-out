@@ -22,6 +22,7 @@
 
         <compiler-plugin.version>3.15.0</compiler-plugin.version>
         <surefire-plugin.version>3.5.6</surefire-plugin.version>
+        <quarkus-langchain4j.version>1.12.0</quarkus-langchain4j.version>
         <vaadin.version>25.2.3</vaadin.version>
         <quarkus-docling.version>1.4.0</quarkus-docling.version>
         <mapstruct.version>1.6.3</mapstruct.version>
@@ -39,9 +40,9 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>${quarkus.platform.group-id}</groupId>
+                <groupId>io.quarkiverse.langchain4j</groupId>
                 <artifactId>quarkus-langchain4j-bom</artifactId>
-                <version>${quarkus.platform.version}</version>
+                <version>${quarkus-langchain4j.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -83,7 +84,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-pgvector</artifactId>
+            <artifactId>quarkus-langchain4j-qdrant</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

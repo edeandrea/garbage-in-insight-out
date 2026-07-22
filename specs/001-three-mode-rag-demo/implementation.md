@@ -334,3 +334,32 @@ Unit test with synthetic text verifying:
 - Segments produced with `mode` metadata
 - Provenance post-processing attaches page metadata when available
 - Missing provenance (Mode A) skips post-processing
+
+---
+
+## Task 11: Implement IngestionStartup with ingestion guard
+
+### Approach
+
+CDI bean that runs at startup. For each mode:
+1. Check if the named pgvector store has data — use
+   `EmbeddingStore.search()` with a zero vector and `maxResults(1)`.
+   If results exist, skip ([decision 41](decisions.md)).
+2. If empty, run the pipeline:
+   - Modes A/B: `ExtractionStrategy.extract()` → `ChunkingStrategy.chunk()`
+     → `EmbeddingStoreIngestor.ingest()`
+   - Mode C: `DoclingExtractor.extractAndChunk()` → embed → store
+
+### Injected beans
+
+- `TikaExtractor` — for Mode A
+- `DoclingExtractor` — for Modes B/C
+- `NaiveChunker` — for Modes A/B
+- Three named `EmbeddingStore<TextSegment>` via `@EmbeddingStoreName`
+- `EmbeddingModel` — for computing embeddings
+- `RagConfig` — for fixture path
+
+### Test
+
+`@QuarkusTest` that verifies the ingestion guard skips re-ingestion
+when the store has data.

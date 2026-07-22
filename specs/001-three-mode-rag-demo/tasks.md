@@ -104,7 +104,7 @@ Status: Approved
       metadata, (b) provenance post-processing attaches page metadata when
       available.
 
-- [ ] 11. **Implement IngestionStartup with ingestion guard** — Create
+- [x] 11. **Implement IngestionStartup with ingestion guard** — Create
        `IngestionStartup` as a CDI bean that runs at application startup.
        For each mode, check the corresponding pgvector table for existing
        rows — skip if data exists. If empty, run the pipeline: modes A/B

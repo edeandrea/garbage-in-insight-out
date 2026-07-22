@@ -12,17 +12,25 @@ quarkus:
         temperature: 0
       embedding-model:
         model-name: nomic-embed-text
-    pgvector:
+    qdrant:
+      devservices:
+        collection:
+          vector-params:
+            size: 768
+            distance: Cosine
       default-store-enabled: false
       naive:
-        table: naive
-        dimension: 768
+        collection-name: naive
+        collection:
+          name: naive
       docling-naive:
-        table: docling_naive_chunk
-        dimension: 768
+        collection-name: docling_naive_chunk
+        collection:
+          name: docling_naive_chunk
       docling-hybrid:
-        table: docling_hybrid_chunk
-        dimension: 768
+        collection-name: docling_hybrid_chunk
+        collection:
+          name: docling_hybrid_chunk
 
 "%dev,test":
   quarkus:

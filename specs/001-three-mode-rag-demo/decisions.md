@@ -591,3 +591,108 @@ be named `pdfPath`/`pdfFile` or something more generic?
 **Decision:** Use generic names like `documentToProcess` or
 `documentPath`. The pipeline may support formats beyond PDF in the
 future, and the naming should reflect the actual abstraction level.
+
+---
+
+## 41. [2026-07-22 15:40 EDT]: Ingestion guard via EmbeddingStore.search()
+
+**Question:** The `EmbeddingStore` interface has no `isEmpty()` or
+`count()` method. How to check if a store already has data for the
+ingestion guard?
+
+**Options considered:**
+- Direct SQL via `DataSource` — works but bypasses the abstraction
+- `EmbeddingStore.search()` with a dummy query and `maxResults(1)`
+
+**Decision:** Use `EmbeddingStore.search()`. If it returns any results,
+the store has data and ingestion is skipped. No direct SQL needed, stays
+within the LangChain4j abstraction.
+
+---
+
+## 42. [2026-07-22 16:11 EDT]: pgvector named stores duplicate bean bug — create reproducer
+
+**Context:** Multiple named pgvector stores sharing the same default
+datasource causes a duplicate `PgVectorAgroalPoolInterceptor` bean
+registration error. The bean gets registered once per named store with
+the same identifier, causing a collision at build time.
+
+**Decision:** Create a minimal reproducer project to hand off to the
+quarkus-langchain4j team. Meanwhile, block on task 11 until the bug is
+resolved or a workaround is found.
+
+---
+
+## 43. [2026-07-22 16:19 EDT]: pgvector named stores bug — new issue, not previously reported
+
+**Research:** Searched `quarkiverse/quarkus-langchain4j` for related
+issues. Found:
+- #2041 (closed) — requested the feature, implemented in PR #2409
+- #2415 (open) — tracks extending named stores to other providers,
+  notes pgvector is done
+- PR #2409 description says "each backed by a different datasource" —
+  sharing the same datasource was likely untested
+
+**Finding:** The bug is unreported. PR #2409 implemented named stores
+assuming each uses a distinct datasource. When multiple named stores
+share the same datasource, `PgVectorAgroalPoolInterceptor` gets
+registered with the same bean identifier for each, causing a duplicate
+bean collision.
+
+**Reproducer:** https://github.com/edeandrea/pgvector-named-stores-reproducer
+
+**Issue filed:** https://github.com/quarkiverse/quarkus-langchain4j/issues/2690
+(2026-07-22)
+
+---
+
+## 44. [2026-07-22 16:22 EDT]: Switch from pgvector to Qdrant
+
+**Question:** pgvector named stores sharing the same datasource is
+broken (#2690). Should we switch to Qdrant, Weaviate, or Milvus?
+
+**Options considered:**
+- Qdrant — lightest footprint, single container, collections map to
+  named stores naturally
+- Weaviate — multi-modal support, medium complexity, overkill
+- Milvus — distributed architecture, 7-10 services, massive overkill
+- Wait for pgvector fix — blocks tasks 11-12
+
+**Decision:** Switch to Qdrant. Replace `quarkus-langchain4j-pgvector`
+with `quarkus-langchain4j-qdrant`. Each mode maps to a separate Qdrant
+collection within one container instance. No shared-datasource issue.
+Update POM, application.yml, IngestionStartup, and plan.md.
+
+---
+
+## 45. [2026-07-22 16:30 EDT]: Use quarkus-langchain4j-bom version independently from quarkus-bom
+
+**Question:** The POM uses `${quarkus.platform.version}` (3.37.3) for
+the `quarkus-langchain4j-bom`, but the latest quarkus-langchain4j is
+1.12.0, which may not align with Quarkus 3.37.3's platform release.
+
+**Decision:** Use the latest `quarkus-langchain4j-bom` version (1.12.0)
+independently. Add a separate version property rather than reusing
+`${quarkus.platform.version}`. Confirm the correct version and
+coordinates on [Maven Central](https://central.sonatype.com).
+
+---
+
+## 46. [2026-07-22 16:44 EDT]: Create Qdrant collections in IngestionStartup
+
+**Question:** Qdrant dev services only create one default collection.
+Named store collections (naive, docling_naive_chunk, docling_hybrid_chunk)
+don't exist until explicitly created. `QdrantEmbeddingStore` doesn't
+auto-create collections on `add()`. No `QdrantClient` CDI bean is
+available — the extension creates `QdrantEmbeddingStore` directly.
+
+**Decision:** Inject `QdrantEmbeddingStoreConfig` to get host/port and
+collection names dynamically from the named config map. Construct a
+`QdrantClient` to create missing collections before ingesting. Use
+"collection doesn't exist" as the ingestion guard itself — if the
+collection exists, data was already ingested; if not, create it and
+ingest. Eliminates the `hasData()` zero-vector search hack.
+
+**Revised (from Eric):** Check collection existence as the ingestion
+guard. No need for a separate `hasData()` method — the collection's
+existence IS the guard.
