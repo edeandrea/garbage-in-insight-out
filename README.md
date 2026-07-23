@@ -73,11 +73,20 @@ Tests use [WireMock](https://docs.quarkiverse.io/quarkus-wiremock/dev/index.html
 
 ```
 dev.ericdeandrea.docling
-├── ai/                  # AI service, RAG augmentor, mode selection
-│   └── ingestion/       # Extraction and chunking strategies
-├── mapping/             # MapStruct mappers (AI ↔ model boundary)
-├── model/               # Value objects (records) — no framework types
-└── ui/                  # Vaadin chat views
+├── ai/                           # AI service, RAG augmentor, mode selection
+│   └── ingestion/                # Ingestion orchestrator
+│       ├── extraction/           # How documents are extracted
+│       │   ├── TikaExtractor         (Mode A)
+│       │   └── DoclingExtractor      (Modes B/C)
+│       ├── chunking/             # How text is split
+│       │   └── NaiveChunker          (Modes A/B)
+│       └── pipeline/             # Mode compositions (self-documenting)
+│           ├── TikaNaiveIngestionPipeline        (Mode A)
+│           ├── DoclingNaiveIngestionPipeline     (Mode B)
+│           └── DoclingHybridIngestionPipeline    (Mode C)
+├── mapping/                      # MapStruct mappers (AI ↔ model boundary)
+├── model/                        # Value objects (records) — no framework types
+└── ui/                           # Vaadin chat views
 ```
 
 The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeandrea/docling/model/) package. LangChain4j types never cross into the UI layer. [`MapStruct mappers`](src/main/java/dev/ericdeandrea/docling/mapping/ChunkMapper.java) handle conversion at the boundary.
@@ -87,9 +96,10 @@ The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeand
 - [`AssistantService`](src/main/java/dev/ericdeandrea/docling/ai/AssistantService.java) — public chat API; maps LangChain4j events to model types
 - [`ChatService`](src/main/java/dev/ericdeandrea/docling/ai/ChatService.java) — package-private `@RegisterAiService` with RAG streaming
 - [`ModeAwareRetrievalAugmentor`](src/main/java/dev/ericdeandrea/docling/ai/ModeAwareRetrievalAugmentor.java) — selects Qdrant collection per mode
-- [`IngestionStartup`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/IngestionStartup.java) — startup ingestion with collection-existence guard
-- [`TikaExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/TikaExtractor.java) / [`DoclingExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/DoclingExtractor.java) — extraction strategies
-- [`NaiveChunker`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/NaiveChunker.java) — sentence splitter + context enrichment
+- [`IngestionStartup`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/IngestionStartup.java) — startup orchestrator, iterates over pipelines
+- [`TikaNaiveIngestionPipeline`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/pipeline/TikaNaiveIngestionPipeline.java) / [`DoclingNaiveIngestionPipeline`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/pipeline/DoclingNaiveIngestionPipeline.java) / [`DoclingHybridIngestionPipeline`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/pipeline/DoclingHybridIngestionPipeline.java) — mode pipelines
+- [`TikaExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/extraction/TikaExtractor.java) / [`DoclingExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/extraction/DoclingExtractor.java) — extraction strategies
+- [`NaiveChunker`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/chunking/NaiveChunker.java) — sentence splitter + context enrichment
 - [`ChatView`](src/main/java/dev/ericdeandrea/docling/ui/ChatView.java) — Vaadin multi-panel layout with toggle buttons
 - [`ChatPanel`](src/main/java/dev/ericdeandrea/docling/ui/ChatPanel.java) — per-mode chat + chunk display panel
 
