@@ -3,12 +3,17 @@ package dev.ericdeandrea.docling.ai.ingestion;
 import java.nio.file.Path;
 import java.util.List;
 
-import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
-import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+
+import io.quarkus.test.junit.QuarkusTest;
+
+import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 
 @QuarkusTest
+@EnabledIfSystemProperty(named = "run.simulations", matches = "true")
 class ChunkSizeSimulationTest {
 
     @Inject

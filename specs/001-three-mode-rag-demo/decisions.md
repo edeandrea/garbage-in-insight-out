@@ -907,6 +907,31 @@ CI when the LLM model is unavailable on the runner.
 
 ---
 
+## 60. [2026-07-23 11:36 EDT]: WireMock for LLM-independent tests
+
+**Question:** Most tests don't care about the LLM's actual output —
+they just need the pipeline to produce something. Can we avoid the
+Ollama dependency for these tests?
+
+**Decision:** Use WireMock (via `quarkus-wiremock` dev service) to stub
+Ollama endpoints (`/api/chat`, `/api/embed`) with canned responses for
+tests that don't depend on LLM quality. Only the planted questions IT
+needs a real LLM. This makes the majority of tests fast, deterministic,
+and CI-friendly.
+
+---
+
+## 61. [2026-07-23 11:36 EDT]: ChunkSizeSimulationTest as opt-in diagnostic
+
+**Question:** `ChunkSizeSimulationTest` is a diagnostic/tuning test,
+not a regression test. Should it run on every build?
+
+**Decision:** Add `@EnabledIfSystemProperty(named = "run.simulations",
+matches = "true")`. Only runs when explicitly requested via
+`-Drun.simulations=true`. Same for `ModeAvsModeBTest`.
+
+---
+
 ## 58. [2026-07-23 10:28 EDT]: CI model downgraded to qwen3:1.7b
 
 **Question:** CI Ollama container crashes with segfault running

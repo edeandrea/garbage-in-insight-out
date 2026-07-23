@@ -6,8 +6,10 @@ import dev.ericdeandrea.docling.model.Mode;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 @QuarkusTest
+@EnabledIfSystemProperty(named = "run.simulations", matches = "true")
 class ModeAvsModeBTest {
 
     @Inject
