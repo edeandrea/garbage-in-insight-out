@@ -7,7 +7,6 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.arc.Arc;
-import io.quarkus.arc.ManagedContext;
 import io.quarkus.test.junit.QuarkusTest;
 
 import dev.ericdeandrea.docling.model.Mode;
@@ -32,7 +31,7 @@ class CurrentModeTest {
 
     @Test
     void isolatesBetweenRequestScopes() {
-        ManagedContext requestContext = Arc.container().requestContext();
+        var requestContext = Arc.container().requestContext();
 
         requestContext.activate();
         currentMode.mode(Mode.NAIVE);

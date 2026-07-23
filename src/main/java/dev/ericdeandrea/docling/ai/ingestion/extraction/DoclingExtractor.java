@@ -26,7 +26,7 @@ import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
 
 @ApplicationScoped
-public class DoclingExtractor implements ExtractionStrategy {
+public class DoclingExtractor {
 
     private final DoclingService doclingService;
 
@@ -34,7 +34,6 @@ public class DoclingExtractor implements ExtractionStrategy {
         this.doclingService = doclingService;
     }
 
-    @Override
     public ExtractionResult extract(Path documentPath) {
         try {
             var response = (InBodyConvertDocumentResponse) doclingService.convertFile(documentPath, OutputFormat.JSON);
@@ -64,7 +63,7 @@ public class DoclingExtractor implements ExtractionStrategy {
 
     private String tableToText(TableItem table) {
         var data = table.getData();
-        if (data == null || data.getGrid() == null) {
+        if ((data == null) || (data.getGrid() == null)) {
             return "";
         }
 
@@ -93,7 +92,7 @@ public class DoclingExtractor implements ExtractionStrategy {
 
     private Optional<ProvenanceEntry> toProvenanceEntry(String itemText, String elementType,
                                                         List<ProvenanceItem> provItems, String fullText) {
-        if (itemText == null || itemText.isEmpty()) {
+        if ((itemText == null) || itemText.isEmpty()) {
             return Optional.empty();
         }
 
@@ -120,11 +119,11 @@ public class DoclingExtractor implements ExtractionStrategy {
                     var metadata = new Metadata()
                         .put("mode", Mode.DOCLING_HYBRID_CHUNK.name());
 
-                    if (chunk.getPageNumbers() != null && !chunk.getPageNumbers().isEmpty()) {
+                    if ((chunk.getPageNumbers() != null) && !chunk.getPageNumbers().isEmpty()) {
                         metadata.put("page_number", chunk.getPageNumbers().getFirst());
                     }
 
-                    if (chunk.getCaptions() != null && !chunk.getCaptions().isEmpty()) {
+                    if ((chunk.getCaptions() != null) && !chunk.getCaptions().isEmpty()) {
                         metadata.put("element_label", chunk.getCaptions().getFirst());
                     }
 

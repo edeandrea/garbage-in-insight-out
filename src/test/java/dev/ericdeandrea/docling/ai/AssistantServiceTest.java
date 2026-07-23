@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkus.arc.Arc;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 
+import dev.ericdeandrea.docling.DoclingWiremockTestProfile;
 import dev.ericdeandrea.docling.model.ChatResponseEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.ChunksRetrievedEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.CompletedEvent;
@@ -20,6 +22,7 @@ import dev.ericdeandrea.docling.model.ChatResponseEvent.TokenEvent;
 import dev.ericdeandrea.docling.model.Mode;
 
 @QuarkusTest
+@TestProfile(DoclingWiremockTestProfile.class)
 class AssistantServiceTest {
 
     @Inject

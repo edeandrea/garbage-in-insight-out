@@ -2,6 +2,7 @@ package dev.ericdeandrea.docling.ai;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
@@ -39,9 +40,8 @@ class PlantedQuestionsValidationTest {
 
     @Test
     void modeARetrievesChunksWithoutPageMetadata() {
-        var chunks = retrieveChunks(Mode.NAIVE, QUESTION_TABLE2);
+        var chunks = retrieveChunks(Mode.NAIVE, QUESTION_TABLE2).orElseThrow();
 
-        assertThat(chunks).isNotNull();
         assertThat(chunks.chunks())
             .isNotEmpty()
             .allSatisfy(chunk -> {
@@ -56,9 +56,8 @@ class PlantedQuestionsValidationTest {
 
     @Test
     void modeBRetrievesChunksWithPageMetadata() {
-        var chunks = retrieveChunks(Mode.DOCLING_NAIVE_CHUNK, QUESTION_TABLE2);
+        var chunks = retrieveChunks(Mode.DOCLING_NAIVE_CHUNK, QUESTION_TABLE2).orElseThrow();
 
-        assertThat(chunks).isNotNull();
         assertThat(chunks.chunks()).isNotEmpty();
 
         assertThat(chunks.chunks())
@@ -71,9 +70,8 @@ class PlantedQuestionsValidationTest {
 
     @Test
     void modeCRetrievesChunksWithRichMetadata() {
-        var chunks = retrieveChunks(Mode.DOCLING_HYBRID_CHUNK, QUESTION_TABLE2);
+        var chunks = retrieveChunks(Mode.DOCLING_HYBRID_CHUNK, QUESTION_TABLE2).orElseThrow();
 
-        assertThat(chunks).isNotNull();
         assertThat(chunks.chunks()).isNotEmpty();
 
         assertThat(chunks.chunks())
@@ -91,14 +89,14 @@ class PlantedQuestionsValidationTest {
 
             assertThat(chunks)
                 .as("Mode %s should return chunks", mode)
-                .isNotNull();
-            assertThat(chunks.chunks())
+                .isPresent();
+            assertThat(chunks.orElseThrow().chunks())
                 .as("Mode %s should return non-empty chunks", mode)
                 .isNotEmpty();
         }
     }
 
-    private ChunksRetrievedEvent retrieveChunks(Mode mode, String question) {
+    private Optional<ChunksRetrievedEvent> retrieveChunks(Mode mode, String question) {
         var events = assistantService.chat(mode, UUID.randomUUID(), question)
             .collect()
             .asList()
@@ -108,7 +106,6 @@ class PlantedQuestionsValidationTest {
         return events.stream()
             .filter(ChunksRetrievedEvent.class::isInstance)
             .map(ChunksRetrievedEvent.class::cast)
-            .findFirst()
-            .orElse(null);
+            .findFirst();
     }
 }

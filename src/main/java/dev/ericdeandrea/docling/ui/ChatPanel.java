@@ -2,6 +2,7 @@ package dev.ericdeandrea.docling.ui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,8 +34,8 @@ class ChatPanel extends VerticalLayout {
     private final AssistantService assistantService;
     private final Details chunksDetails;
     private final Grid<ChunkRow> chunksGrid;
-    private final ArrayList<MessageListItem> items = new ArrayList<>();
-    private final ArrayList<ChunkRow> allChunkRows = new ArrayList<>();
+    private final List<MessageListItem> items = new ArrayList<>();
+    private final List<ChunkRow> allChunkRows = new ArrayList<>();
     private final Map<Integer, MessageListItem> roundToAssistantItem = new HashMap<>();
     private final UUID conversationId = UUID.randomUUID();
     private int currentRound;

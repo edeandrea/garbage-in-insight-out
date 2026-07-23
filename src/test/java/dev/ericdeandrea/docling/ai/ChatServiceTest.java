@@ -49,8 +49,8 @@ class ChatServiceTest {
                 .await().indefinitely();
 
             assertThat(events)
-                .isNotEmpty()
-                .as("Mode %s should produce chat events", mode);
+                .as("Mode %s should produce chat events", mode)
+                .isNotEmpty();
         }
     }
 

@@ -21,8 +21,8 @@ import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStoreConfig;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
-import dev.ericdeandrea.docling.config.DemoConfig;
 import dev.ericdeandrea.docling.ai.ingestion.pipeline.IngestionPipeline;
+import dev.ericdeandrea.docling.config.DemoConfig;
 
 @ApplicationScoped
 class IngestionStartup {
@@ -71,7 +71,7 @@ class IngestionStartup {
             Log.info("Ingestion complete");
         }
         catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException("Ingestion failed", e);
+            throw new IngestionException("Ingestion failed", e);
         }
     }
 
@@ -107,7 +107,8 @@ class IngestionStartup {
                 .get();
         }
         catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException("Failed to create Qdrant collection: %s".formatted(collectionName), e);
+
+            throw new IngestionException("Failed to create Qdrant collection: %s".formatted(collectionName), e);
         }
     }
 }

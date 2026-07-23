@@ -10,11 +10,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
 
 @ApplicationScoped
-public class TikaExtractor implements ExtractionStrategy {
+public class TikaExtractor {
 
     private final ApacheTikaDocumentParser parser = new ApacheTikaDocumentParser();
 
-    @Override
     public ExtractionResult extract(Path documentPath) {
         try (var inputStream = Files.newInputStream(documentPath)) {
             var document = parser.parse(inputStream);

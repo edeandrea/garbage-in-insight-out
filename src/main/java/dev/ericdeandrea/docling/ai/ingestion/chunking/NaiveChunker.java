@@ -14,7 +14,7 @@ import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 import dev.langchain4j.data.segment.TextSegment;
 
 @ApplicationScoped
-public class NaiveChunker implements ChunkingStrategy {
+public class NaiveChunker {
 
     private final DemoConfig demoConfig;
 
@@ -22,7 +22,6 @@ public class NaiveChunker implements ChunkingStrategy {
         this.demoConfig = demoConfig;
     }
 
-    @Override
     public List<TextSegment> chunk(ExtractionResult result, Mode mode) {
         var splitter = new DocumentBySentenceSplitter(demoConfig.rag().maxTokens(), demoConfig.rag().overlap());
         var segments = splitter.split(result.document());
@@ -65,13 +64,14 @@ public class NaiveChunker implements ChunkingStrategy {
     }
 
     private boolean overlaps(ProvenanceEntry entry, int segmentStart, int segmentEnd) {
-        return entry.startChar() < segmentEnd && entry.endChar() > segmentStart;
+        return (entry.startChar() < segmentEnd) && (entry.endChar() > segmentStart);
     }
 
+    // https://docs.quarkiverse.io/quarkus-langchain4j/dev/rag-ingestion.html
     private void enrichWithSurroundingContext(List<TextSegment> segments, int before, int after) {
         for (int i = 0; i < segments.size(); i++) {
             var extendedContent = IntStream.rangeClosed(i - before, i + after)
-                .filter(j -> j >= 0 && j < segments.size())
+                .filter(j -> (j >= 0) && (j < segments.size()))
                 .mapToObj(j -> segments.get(j).text())
                 .collect(Collectors.joining(" "));
             segments.get(i).metadata().put("extended_content", extendedContent);

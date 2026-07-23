@@ -1052,6 +1052,41 @@ and the IT.
 
 ---
 
+## 72. [2026-07-23 15:33 EDT]: Code review fixes
+
+**Context:** Full code review against CLAUDE.md coding standards found
+16 issues across 3 severity levels.
+
+**Critical fixes applied:**
+- Restore interrupt status (`Thread.currentThread().interrupt()`)
+  before rethrowing in IngestionStartup catch blocks
+- Create domain-specific `IngestionException` (replaces generic
+  `RuntimeException`)
+- Fix AssertJ `.as()` placement in ChatServiceTest (must come before
+  the assertion, not after)
+
+**Improvement fixes applied:**
+- Remove premature interfaces (`ExtractionStrategy`, `ChunkingStrategy`)
+  that were never used polymorphically
+- Fix `Optional.orElse(null)` in PlantedQuestionsValidationTest —
+  return `Optional` instead
+- Move DemoConfigTest to `config` package (matches source location)
+- Use `var` in CurrentModeTest where type is clear from RHS
+- Use `List` interface instead of `ArrayList` for field types in
+  ChatPanel
+
+**Not fixed (acceptable):**
+- Pipeline ingestor code duplication (6 lines × 3 files — extraction
+  would require passing store+model, defeating encapsulation)
+- `DoclingExtractor` dual responsibility — already decided in
+  decision 19 (no thin wrapper for Mode C)
+- System.out in diagnostic tests — gated tests produce console output
+  for manual inspection by design
+- String concatenation in diagnostic tests — same rationale
+- One-statement-per-line in test helpers — minor nit in test code
+
+---
+
 ## 71. [2026-07-23 15:12 EDT]: Top-level DemoConfig with nested RagConfig
 
 **Question:** `RagConfig` sits in `dev.ericdeandrea.docling.ai` with
