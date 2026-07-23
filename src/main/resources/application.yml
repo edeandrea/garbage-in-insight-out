@@ -3,6 +3,8 @@ quarkus:
     category:
       "org.apache.pdfbox":
         level: ERROR
+      "io.quarkiverse.wiremock":
+        level: WARN
   langchain4j:
     chat-model:
       provider: openai

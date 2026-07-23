@@ -1052,6 +1052,17 @@ and the IT.
 
 ---
 
+## 67. [2026-07-23 13:17 EDT]: Parallelize ingestion with virtual threads
+
+**Question:** The three mode ingestions run sequentially (~5 min total).
+They're independent — no shared state.
+
+**Decision:** Run all three in parallel using Java 25 virtual threads
+via `StructuredTaskScope`. Ingestion time bounded by the slowest mode
+instead of the sum.
+
+---
+
 ## 66. [2026-07-23 13:14 EDT]: Suppress noisy log warnings
 
 **Question:** PDFBox font warnings and a Log4j "no provider" error

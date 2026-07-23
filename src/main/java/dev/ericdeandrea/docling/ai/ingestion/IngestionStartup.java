@@ -4,22 +4,27 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import dev.ericdeandrea.docling.ai.RagConfig;
-import dev.ericdeandrea.docling.model.Mode;
-import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
+import io.quarkus.logging.Log;
+import io.quarkus.runtime.StartupEvent;
+
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
 import io.qdrant.client.grpc.Collections.Distance;
 import io.qdrant.client.grpc.Collections.VectorParams;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStoreConfig;
-import io.quarkus.logging.Log;
-import io.quarkus.runtime.StartupEvent;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+
+import dev.ericdeandrea.docling.ai.RagConfig;
+import dev.ericdeandrea.docling.model.Mode;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 
 @ApplicationScoped
 class IngestionStartup {
@@ -69,9 +74,21 @@ class IngestionStartup {
 
             Log.infof("Starting ingestion for document: %s", documentPath);
 
-            ingestModeA(documentPath, client, existingCollections);
-            ingestModeB(documentPath, client, existingCollections);
-            ingestModeC(documentPath, client, existingCollections);
+            Uni.join()
+               .all(
+                    Uni.createFrom().voidItem()
+                        .invoke(() -> ingestModeA(documentPath, client, existingCollections))
+                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool()),
+                    Uni.createFrom().voidItem()
+                        .invoke(() -> ingestModeB(documentPath, client, existingCollections))
+                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool()),
+                    Uni.createFrom().voidItem()
+                        .invoke(() -> ingestModeC(documentPath, client, existingCollections))
+                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                )
+                .andFailFast()
+                .await()
+                .indefinitely();
 
             Log.info("Ingestion complete");
         }
@@ -80,8 +97,7 @@ class IngestionStartup {
         }
     }
 
-    private void ingestModeA(Path documentPath, QdrantClient client, List<String> existingCollections)
-            throws ExecutionException, InterruptedException {
+    private void ingestModeA(Path documentPath, QdrantClient client, List<String> existingCollections) {
         var collectionName = collectionName("naive");
 
         if (existingCollections.contains(collectionName)) {
@@ -97,8 +113,7 @@ class IngestionStartup {
         Log.infof("Mode A ingested %d segments", segments.size());
     }
 
-    private void ingestModeB(Path documentPath, QdrantClient client, List<String> existingCollections)
-            throws ExecutionException, InterruptedException {
+    private void ingestModeB(Path documentPath, QdrantClient client, List<String> existingCollections) {
         var collectionName = collectionName("docling-naive");
 
         if (existingCollections.contains(collectionName)) {
@@ -114,8 +129,7 @@ class IngestionStartup {
         Log.infof("Mode B ingested %d segments", segments.size());
     }
 
-    private void ingestModeC(Path documentPath, QdrantClient client, List<String> existingCollections)
-            throws ExecutionException, InterruptedException {
+    private void ingestModeC(Path documentPath, QdrantClient client, List<String> existingCollections) {
         var collectionName = collectionName("docling-hybrid");
 
         if (existingCollections.contains(collectionName)) {
@@ -138,14 +152,18 @@ class IngestionStartup {
         return qdrantConfig.defaultConfig().collection().name();
     }
 
-    private void createCollection(QdrantClient client, String collectionName)
-            throws ExecutionException, InterruptedException {
-        client.createCollectionAsync(collectionName,
-            VectorParams.newBuilder()
-                .setSize(VECTOR_SIZE)
-                .setDistance(Distance.Cosine)
-                .build())
-            .get();
+    private void createCollection(QdrantClient client, String collectionName) {
+        try {
+            client.createCollectionAsync(collectionName,
+                VectorParams.newBuilder()
+                    .setSize(VECTOR_SIZE)
+                    .setDistance(Distance.Cosine)
+                    .build())
+                .get();
+        }
+        catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException("Failed to create Qdrant collection: %s".formatted(collectionName), e);
+        }
     }
 
     private void ingest(List<TextSegment> segments, EmbeddingStore<TextSegment> store) {
