@@ -799,3 +799,44 @@ context, causing `ContextNotActiveException`.
 need `@SessionScoped` beans. Keep `ChatService` as `@SessionScoped`
 for the production Vaadin use case. The Undertow extension (pulled
 in by Vaadin) provides the session context implementation.
+
+---
+
+## 51. [2026-07-23 09:00 EDT]: AIOrchestrator rejected — use raw MessageList/MessageInput
+
+**Question:** Can Vaadin's `AIOrchestrator` with
+`LangChain4JLLMProvider` support our multi-panel mode-switching RAG
+demo with custom event mapping?
+
+**Investigation:**
+- `AIOrchestrator` manages its own 30-message memory window — conflicts
+  with our `@MemoryId`/`@SessionScoped` memory management
+- Takes `StreamingChatModel` directly — can't plug `AssistantService`
+  with custom RAG pipeline
+- No access to `ContentFetchedEvent` — can't populate the chunk display
+- Single `MessageList` + `MessageInput` per builder — no multi-panel
+
+**Decision:** Use raw `MessageList`/`MessageInput` components directly.
+The orchestrator is designed for simple chat UIs, not multi-panel
+mode-switching RAG demos with custom event mapping.
+
+---
+
+## 52. [2026-07-23 09:31 EDT]: Multi-panel layout design
+
+**Question:** How should the multi-panel layout be arranged, how are
+panels added/removed, and how are mode choices surfaced?
+
+**Layout:** Option A — horizontal panels side by side, chunks
+collapsible below each chat area. Best for 2-3 panel comparison on
+stage.
+
+**Panel controls:** Three toggle buttons in a top toolbar (one per
+mode: A, B, C). Clicking a button shows/hides that mode's panel.
+- Max one panel per type (toggle button enforces this)
+- Panel state (conversation + chunks) persists when toggled off/on
+- Default on first load: only Mode A active
+
+**Rationale:** Toggle buttons are one-click, visible at all times,
+and naturally enforce the one-panel-per-type constraint. Default to
+Mode A for the cold-open demo beat.

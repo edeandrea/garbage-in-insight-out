@@ -518,3 +518,55 @@ Internally: sets `CurrentMode`, calls `ChatService.chat()`, maps
 
 `@QuarkusTest` with session context activation, verifying event mapping
 across all three modes.
+
+---
+
+## Task 17: Evaluate Vaadin AIOrchestrator vs raw components
+
+### Evaluation result
+
+**AIOrchestrator rejected.** See [decision 51](decisions.md).
+
+Reasons:
+1. Manages its own memory (conflicts with `@MemoryId`)
+2. Takes `StreamingChatModel` directly (can't use `AssistantService`)
+3. No custom event access (can't show retrieved chunks)
+4. Single panel only (no multi-panel support)
+
+### Chosen approach
+
+Use raw `MessageList` + `MessageInput` components directly. Subscribe
+to `AssistantService.chat()` `Multi<ChatResponseEvent>`, render
+`TokenEvent`s to `MessageList` via Vaadin push (`ui.access()`).
+Chunk display is a separate component updated from
+`ChunksRetrievedEvent`s.
+
+---
+
+## Task 18: Build multi-panel layout
+
+### Layout design ([decision 52](decisions.md))
+
+- Horizontal panels side by side, chunks collapsible below chat
+- Top toolbar with three toggle buttons (A/B/C)
+- Default on first load: only Mode A active
+- Max one panel per type
+- Panel state persists when toggled off/on
+- Panels adjust width: 1=full, 2=halves, 3=thirds
+
+### Package
+
+`dev.ericdeandrea.docling.ui`
+
+### Classes
+
+- `ChatView` — main `@Route("")` view. Contains the toolbar and a
+  `HorizontalLayout` for the panels.
+- `ChatPanel` — reusable component for a single mode's panel. Contains
+  `MessageList`, `MessageInput`, and a collapsible chunks section.
+  Bound to a specific `Mode`.
+
+### Test
+
+`QuarkusBrowserlessTest` verifying panels can be added/removed
+independently.

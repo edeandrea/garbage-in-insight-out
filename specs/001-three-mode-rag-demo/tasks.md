@@ -168,7 +168,7 @@ Status: Approved
        `CurrentMode` directly. Write a `@QuarkusTest` verifying event
        mapping.
 
-- [ ] 17. **Evaluate Vaadin AIOrchestrator vs raw components** — Create a
+- [x] 17. **Evaluate Vaadin AIOrchestrator vs raw components** — Create a
        minimal Vaadin route testing whether `AIOrchestrator` with
        `LangChain4JLLMProvider` supports: (a) multiple independent chat
        panels, (b) per-panel mode switching via `AssistantService`,
@@ -177,7 +177,7 @@ Status: Approved
        `MessageList`/`MessageInput`. Output: documented decision and
        chosen approach skeleton with a smoke test.
 
-- [ ] 18. **Build multi-panel layout** — Before writing code, present
+- [x] 18. **Build multi-panel layout** — Before writing code, present
        layout options to the user (panel arrangement, where chunks display
        goes relative to chat, toolbar placement for add/remove buttons,
        overall page structure). Create the main Vaadin view with dynamic
