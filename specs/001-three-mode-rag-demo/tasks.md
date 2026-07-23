@@ -206,7 +206,7 @@ Status: Approved
        types in the UI. Write a `QuarkusBrowserlessTest` verifying chunks
        are displayed with metadata.
 
-- [ ] 21. **Implement response-to-chunks highlighting** — Clicking a
+- [x] 21. **Implement response-to-chunks highlighting** — Clicking a
        response in the chat area highlights the chunks used to generate
        that response. Each response tracks its associated chunks (captured
        from `ChunksRetrievedEvent`s in the `AssistantService` stream).

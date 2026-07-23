@@ -858,3 +858,33 @@ Mode A for the cold-open demo beat.
 with columns (score, page, type, label, timestamp, text preview) where
 clicking a row expands to show the full chunk text. Best of both:
 scannable metadata columns + full text on demand.
+
+---
+
+## 54. [2026-07-23 09:54 EDT]: Response-to-chunks via color coding, not click handlers
+
+**Question:** How to visually link a chat response to its retrieved
+chunks? `MessageList` doesn't natively support click events on
+individual messages.
+
+**Decision:** Color-code each Q&A round. Each response and its
+corresponding chunk grid rows share the same background color. Visual
+correlation without click handlers — the audience sees matching colors.
+The chunks grid always shows the most recent response's chunks;
+previous chunks are cleared when a new question is asked.
+
+**Revised [2026-07-23 09:55 EDT]:** Keep historical chunks — don't
+clear on new question. Each Q&A round adds rows to the grid with a
+round number. Most recent round's rows appear at the top.
+
+**Revised [2026-07-23 09:59 EDT]:** Combine options 2 and 3:
+- Color coding: `setUserColorIndex()` per round on assistant messages,
+  matching color on grid rows. Passive visual grouping.
+- Click grid → highlight chat: clicking a chunk row in the grid
+  highlights and scrolls to the corresponding chat message via
+  `addClassName`. Active navigation.
+
+**Style note:** Use `LumoUtility` class constants (e.g.,
+`LumoUtility.Whitespace.PRE_WRAP`) instead of raw CSS string literals
+wherever Vaadin provides them. Prefer constants over strings across
+the board.

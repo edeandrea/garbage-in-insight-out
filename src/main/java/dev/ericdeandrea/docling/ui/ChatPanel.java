@@ -1,36 +1,43 @@
 package dev.ericdeandrea.docling.ui;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Pre;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageInput.SubmitEvent;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import dev.ericdeandrea.docling.ai.AssistantService;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.ChunksRetrievedEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.CompletedEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.TokenEvent;
 import dev.ericdeandrea.docling.model.Mode;
-import dev.ericdeandrea.docling.model.RetrievedChunk;
 
 class ChatPanel extends VerticalLayout {
+
+    private static final int MAX_COLOR_INDEX = 9;
 
     private final Mode mode;
     private final MessageList messageList;
     private final MessageInput messageInput;
     private final AssistantService assistantService;
     private final Details chunksDetails;
-    private final Grid<RetrievedChunk> chunksGrid;
+    private final Grid<ChunkRow> chunksGrid;
     private final ArrayList<MessageListItem> items = new ArrayList<>();
+    private final ArrayList<ChunkRow> allChunkRows = new ArrayList<>();
+    private final Map<Integer, MessageListItem> roundToAssistantItem = new HashMap<>();
     private UUID conversationId = UUID.randomUUID();
+    private int currentRound;
+    private MessageListItem currentAssistantItem;
 
     ChatPanel(Mode mode, AssistantService assistantService) {
         this.mode = mode;
@@ -57,33 +64,38 @@ class ChatPanel extends VerticalLayout {
         messageInput.setWidthFull();
     }
 
-    private Grid<RetrievedChunk> createChunksGrid() {
-        var grid = new Grid<>(RetrievedChunk.class, false);
+    private Grid<ChunkRow> createChunksGrid() {
+        var grid = new Grid<>(ChunkRow.class, false);
 
-        grid.addColumn(chunk -> "%.2f".formatted(chunk.metadata().relevanceScore()))
+        grid.addColumn(ChunkRow::round)
+            .setHeader("#").setFlexGrow(0).setWidth("40px");
+        grid.addColumn(row -> "%.2f".formatted(row.chunk().metadata().relevanceScore()))
             .setHeader("Score").setFlexGrow(0).setWidth("70px");
-        grid.addColumn(chunk -> chunk.metadata().pageNumber() != null
-                ? chunk.metadata().pageNumber().toString() : "—")
+        grid.addColumn(row -> row.chunk().metadata().pageNumber() != null
+                ? row.chunk().metadata().pageNumber().toString() : "—")
             .setHeader("Page").setFlexGrow(0).setWidth("60px");
-        grid.addColumn(chunk -> chunk.metadata().elementType() != null
-                ? chunk.metadata().elementType() : "—")
+        grid.addColumn(row -> row.chunk().metadata().elementType() != null
+                ? row.chunk().metadata().elementType() : "—")
             .setHeader("Type").setFlexGrow(0).setWidth("100px");
-        grid.addColumn(chunk -> chunk.metadata().elementLabel() != null
-                ? chunk.metadata().elementLabel() : "")
+        grid.addColumn(row -> row.chunk().metadata().elementLabel() != null
+                ? row.chunk().metadata().elementLabel() : "")
             .setHeader("Label").setFlexGrow(0).setWidth("90px");
-        grid.addColumn(chunk -> chunk.metadata().timestamp() != null
-                ? chunk.metadata().timestamp().toString() : "")
+        grid.addColumn(row -> row.chunk().metadata().timestamp() != null
+                ? row.chunk().metadata().timestamp().toString() : "")
             .setHeader("Time").setFlexGrow(0).setWidth("110px");
-        grid.addColumn(chunk -> chunk.text().length() > 80
-                ? chunk.text().substring(0, 80) + "..." : chunk.text())
+        grid.addColumn(row -> {
+                var text = row.chunk().text();
+                return text.length() > 80 ? text.substring(0, 80) + "..." : text;
+            })
             .setHeader("Preview").setFlexGrow(1);
 
-        grid.setItemDetailsRenderer(new ComponentRenderer<>(chunk -> {
-            var pre = new Pre(chunk.text());
-            pre.getStyle().set("white-space", "pre-wrap");
-            pre.getStyle().set("word-break", "break-word");
+        grid.setItemDetailsRenderer(new ComponentRenderer<>(row -> {
+            var pre = new Pre(row.chunk().text());
+            pre.addClassNames(LumoUtility.Whitespace.PRE_WRAP);
             return pre;
         }));
+
+        grid.addItemClickListener(event -> highlightMessageForRound(event.getItem().round()));
 
         grid.setWidthFull();
         grid.setAllRowsVisible(true);
@@ -94,40 +106,63 @@ class ChatPanel extends VerticalLayout {
     private void onSubmit(SubmitEvent event) {
         var userMessage = event.getValue();
         var ui = UI.getCurrent();
+        currentRound++;
+        var colorIndex = currentRound % MAX_COLOR_INDEX;
 
         var userItem = new MessageListItem(userMessage);
         userItem.setUserName("You");
         items.add(userItem);
 
-        var assistantItem = new MessageListItem("");
-        assistantItem.setUserName(mode.displayLabel());
-        items.add(assistantItem);
+        currentAssistantItem = new MessageListItem("");
+        currentAssistantItem.setUserName(mode.displayLabel());
+        currentAssistantItem.setUserColorIndex(colorIndex);
+        roundToAssistantItem.put(currentRound, currentAssistantItem);
+        items.add(currentAssistantItem);
 
         messageList.setItems(new ArrayList<>(items));
 
+        var round = currentRound;
         assistantService.chat(mode, conversationId, userMessage)
             .subscribe().with(
-                event1 -> ui.access(() -> {
-                    switch (event1) {
+                chatEvent -> ui.access(() -> {
+                    switch (chatEvent) {
                         case TokenEvent token -> {
-                            assistantItem.setText(assistantItem.getText() + token.text());
+                            currentAssistantItem.setText(currentAssistantItem.getText() + token.text());
                             messageList.setItems(new ArrayList<>(items));
                         }
-                        case ChunksRetrievedEvent chunksEvent -> displayChunks(chunksEvent);
+                        case ChunksRetrievedEvent chunksEvent -> addChunks(chunksEvent, round);
                         case CompletedEvent ignored -> {}
                     }
                 }),
                 failure -> ui.access(() -> {
-                    assistantItem.setText("Error: " + failure.getMessage());
+                    currentAssistantItem.setText("Error: " + failure.getMessage());
                     messageList.setItems(new ArrayList<>(items));
                 })
             );
     }
 
-    private void displayChunks(ChunksRetrievedEvent event) {
-        chunksGrid.setItems(event.chunks());
-        chunksDetails.setSummaryText("Retrieved Chunks (%d)".formatted(event.chunks().size()));
+    private void addChunks(ChunksRetrievedEvent event, int round) {
+        var newRows = event.chunks().stream()
+            .map(chunk -> new ChunkRow(round, chunk))
+            .toList();
+
+        allChunkRows.addAll(0, newRows);
+        chunksGrid.setItems(new ArrayList<>(allChunkRows));
+        chunksDetails.setSummaryText("Retrieved Chunks (%d)".formatted(allChunkRows.size()));
         chunksDetails.setOpened(true);
+    }
+
+    private void highlightMessageForRound(int round) {
+        for (var item : roundToAssistantItem.values()) {
+            item.removeClassNames("highlighted");
+        }
+
+        var targetItem = roundToAssistantItem.get(round);
+        if (targetItem != null) {
+            targetItem.addClassNames("highlighted");
+        }
+
+        messageList.setItems(new ArrayList<>(items));
     }
 
     Mode mode() {
