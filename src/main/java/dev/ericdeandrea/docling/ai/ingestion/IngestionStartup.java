@@ -1,6 +1,7 @@
 package dev.ericdeandrea.docling.ai.ingestion;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -86,9 +87,11 @@ class IngestionStartup {
                         .invoke(() -> ingestModeC(documentPath, client, existingCollections))
                         .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 )
-                .andFailFast()
+                .andCollectFailures()
+                .onFailure()
+                .invoke(t -> Log.error("Ingestion failed for one or more modes", t))
                 .await()
-                .indefinitely();
+                .atMost(Duration.ofMinutes(10));
 
             Log.info("Ingestion complete");
         }
