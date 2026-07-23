@@ -8,12 +8,13 @@ import org.junit.jupiter.api.Test;
 
 import dev.ericdeandrea.docling.ai.ingestion.extraction.ExtractionResult;
 import dev.ericdeandrea.docling.ai.ingestion.extraction.ProvenanceEntry;
+import dev.ericdeandrea.docling.config.DemoConfig;
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.document.Document;
 
 class NaiveChunkerTest {
 
-    final NaiveChunker chunker = new NaiveChunker(new TestRagConfig());
+    final NaiveChunker chunker = new NaiveChunker(new TestDemoConfig());
 
     @Test
     void chunksDocumentWithModeMetadata() {
@@ -83,7 +84,13 @@ class NaiveChunkerTest {
             );
     }
 
-    private static class TestRagConfig implements dev.ericdeandrea.docling.ai.RagConfig {
+    private static class TestDemoConfig implements DemoConfig {
+        private final RagConfig ragConfig = new TestRagConfig();
+
+        @Override public RagConfig rag() { return ragConfig; }
+    }
+
+    private static class TestRagConfig implements DemoConfig.RagConfig {
         @Override public int topK() { return 4; }
         @Override public int maxTokens() { return 50; }
         @Override public int overlap() { return 10; }

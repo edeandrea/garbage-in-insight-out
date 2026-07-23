@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 
+import dev.ericdeandrea.docling.config.DemoConfig;
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -22,7 +23,7 @@ class ModeAwareRetrievalAugmentor implements RetrievalAugmentor {
     private final CurrentMode currentMode;
     private final Map<Mode, EmbeddingStore<TextSegment>> stores;
     private final EmbeddingModel embeddingModel;
-    private final RagConfig ragConfig;
+    private final DemoConfig demoConfig;
 
     ModeAwareRetrievalAugmentor(
             CurrentMode currentMode,
@@ -30,7 +31,7 @@ class ModeAwareRetrievalAugmentor implements RetrievalAugmentor {
             @EmbeddingStoreName("docling-naive") EmbeddingStore<TextSegment> doclingNaiveStore,
             @EmbeddingStoreName("docling-hybrid") EmbeddingStore<TextSegment> doclingHybridStore,
             EmbeddingModel embeddingModel,
-            RagConfig ragConfig) {
+            DemoConfig demoConfig) {
         this.currentMode = currentMode;
         this.stores = Map.of(
             Mode.NAIVE, naiveStore,
@@ -38,7 +39,7 @@ class ModeAwareRetrievalAugmentor implements RetrievalAugmentor {
             Mode.DOCLING_HYBRID_CHUNK, doclingHybridStore
         );
         this.embeddingModel = embeddingModel;
-        this.ragConfig = ragConfig;
+        this.demoConfig = demoConfig;
     }
 
     @Override
@@ -49,7 +50,7 @@ class ModeAwareRetrievalAugmentor implements RetrievalAugmentor {
         var retriever = EmbeddingStoreContentRetriever.builder()
             .embeddingStore(store)
             .embeddingModel(embeddingModel)
-            .maxResults(ragConfig.topK())
+            .maxResults(demoConfig.rag().topK())
             .build();
 
         var augmentor = DefaultRetrievalAugmentor.builder()

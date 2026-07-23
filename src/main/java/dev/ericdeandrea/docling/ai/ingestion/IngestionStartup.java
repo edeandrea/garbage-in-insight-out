@@ -21,7 +21,7 @@ import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStoreConfig;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
-import dev.ericdeandrea.docling.ai.RagConfig;
+import dev.ericdeandrea.docling.config.DemoConfig;
 import dev.ericdeandrea.docling.ai.ingestion.pipeline.IngestionPipeline;
 
 @ApplicationScoped
@@ -30,20 +30,20 @@ class IngestionStartup {
     private static final int VECTOR_SIZE = 768;
 
     private final Instance<IngestionPipeline> pipelines;
-    private final RagConfig ragConfig;
+    private final DemoConfig demoConfig;
     private final QdrantEmbeddingStoreConfig qdrantConfig;
 
     IngestionStartup(
             Instance<IngestionPipeline> pipelines,
-            RagConfig ragConfig,
+            DemoConfig demoConfig,
             QdrantEmbeddingStoreConfig qdrantConfig) {
         this.pipelines = pipelines;
-        this.ragConfig = ragConfig;
+        this.demoConfig = demoConfig;
         this.qdrantConfig = qdrantConfig;
     }
 
     void onStart(@Observes StartupEvent event) {
-        var documentPath = Path.of(ragConfig.fixturePath());
+        var documentPath = Path.of(demoConfig.rag().fixturePath());
         var defaultConfig = qdrantConfig.defaultConfig();
         var host = defaultConfig.host().orElse("localhost");
         var port = defaultConfig.port();

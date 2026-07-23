@@ -1052,6 +1052,18 @@ and the IT.
 
 ---
 
+## 71. [2026-07-23 15:12 EDT]: Top-level DemoConfig with nested RagConfig
+
+**Question:** `RagConfig` sits in `dev.ericdeandrea.docling.ai` with
+prefix `rag`. Should there be a top-level config grouping?
+
+**Decision:** Create `DemoConfig` in a new `config` package with
+`@ConfigMapping(prefix = "demo")`. `RagConfig` becomes a nested
+interface accessed via `demoConfig.rag()`. YAML becomes `demo.rag.*`.
+Extensible for future config groups (e.g., `demo.ui.*`).
+
+---
+
 ## 70. [2026-07-23 14:52 EDT]: Explicit IngestionPipeline classes per mode
 
 **Question:** The mode→strategy mapping in `IngestionStartup` is

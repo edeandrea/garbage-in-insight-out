@@ -6,7 +6,7 @@ import java.util.stream.IntStream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import dev.ericdeandrea.docling.ai.RagConfig;
+import dev.ericdeandrea.docling.config.DemoConfig;
 import dev.ericdeandrea.docling.ai.ingestion.extraction.ExtractionResult;
 import dev.ericdeandrea.docling.ai.ingestion.extraction.ProvenanceEntry;
 import dev.ericdeandrea.docling.model.Mode;
@@ -16,15 +16,15 @@ import dev.langchain4j.data.segment.TextSegment;
 @ApplicationScoped
 public class NaiveChunker implements ChunkingStrategy {
 
-    private final RagConfig ragConfig;
+    private final DemoConfig demoConfig;
 
-    NaiveChunker(RagConfig ragConfig) {
-        this.ragConfig = ragConfig;
+    NaiveChunker(DemoConfig demoConfig) {
+        this.demoConfig = demoConfig;
     }
 
     @Override
     public List<TextSegment> chunk(ExtractionResult result, Mode mode) {
-        var splitter = new DocumentBySentenceSplitter(ragConfig.maxTokens(), ragConfig.overlap());
+        var splitter = new DocumentBySentenceSplitter(demoConfig.rag().maxTokens(), demoConfig.rag().overlap());
         var segments = splitter.split(result.document());
         enrichWithSurroundingContext(segments, 2, 2);
 
