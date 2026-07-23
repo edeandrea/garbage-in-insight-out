@@ -14,6 +14,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.page.ColorScheme;
 import com.vaadin.flow.router.Route;
+
 import dev.ericdeandrea.docling.ai.AssistantService;
 import dev.ericdeandrea.docling.model.Mode;
 

@@ -5,8 +5,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
 
 @ApplicationScoped
 class TikaExtractor implements ExtractionStrategy {

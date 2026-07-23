@@ -4,15 +4,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import io.quarkiverse.docling.runtime.client.DoclingService;
-import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 import ai.docling.serve.api.convert.request.options.OutputFormat;
+
+import io.quarkus.test.junit.QuarkusTest;
+
+import io.quarkiverse.docling.runtime.client.DoclingService;
 
 @QuarkusTest
 @EnabledIfSystemProperty(named = "capture.docling.responses", matches = "true")

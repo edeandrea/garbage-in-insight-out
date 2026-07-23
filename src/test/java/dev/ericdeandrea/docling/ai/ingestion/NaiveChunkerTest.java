@@ -4,9 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Test;
+
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.document.Document;
-import org.junit.jupiter.api.Test;
 
 class NaiveChunkerTest {
 

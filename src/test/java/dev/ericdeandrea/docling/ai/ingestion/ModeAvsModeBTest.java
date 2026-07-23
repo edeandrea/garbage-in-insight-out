@@ -2,11 +2,14 @@ package dev.ericdeandrea.docling.ai.ingestion;
 
 import java.nio.file.Path;
 
-import dev.ericdeandrea.docling.model.Mode;
-import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+
+import io.quarkus.test.junit.QuarkusTest;
+
+import dev.ericdeandrea.docling.model.Mode;
 
 @QuarkusTest
 @EnabledIfSystemProperty(named = "run.simulations", matches = "true")

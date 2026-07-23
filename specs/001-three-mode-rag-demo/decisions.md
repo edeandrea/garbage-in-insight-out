@@ -1052,14 +1052,40 @@ and the IT.
 
 ---
 
-## 67. [2026-07-23 13:17 EDT]: Parallelize ingestion with virtual threads
+## 69. [2026-07-23 13:31 EDT]: Import order convention from import-order.txt
+
+**Question:** Import ordering should follow the project's
+`import-order.txt` file. Should this be documented in CLAUDE.md?
+
+**Decision:** Document in CLAUDE.md's coding style section. All Java
+files should follow the import order: static, `java`, `javax`,
+`jakarta`, `org`, `com`, `ai`, `org.apache.commons`,
+`org.springframework`, `io.quarkus`, `io`, then everything else.
+Blank line between groups. Reformat all existing files.
+
+---
+
+## 68. [2026-07-23 13:26 EDT]: Parallel ingestion with Mutiny andCollectFailures
+
+**Question:** Parallel ingestion should handle failures gracefully
+and not hang indefinitely.
+
+**Decision:** Use `Uni.join().all()` with `andCollectFailures()` (let
+all modes finish even if one fails), `onFailure().invoke()` for error
+logging, and `await().atMost(Duration.ofMinutes(10))` as a timeout.
+Replaces `andFailFast()` + `await().indefinitely()`.
+
+---
+
+## 67. [2026-07-23 13:17 EDT]: Parallelize ingestion with Mutiny
 
 **Question:** The three mode ingestions run sequentially (~5 min total).
 They're independent — no shared state.
 
-**Decision:** Run all three in parallel using Java 25 virtual threads
-via `StructuredTaskScope`. Ingestion time bounded by the slowest mode
-instead of the sum.
+**Decision:** Run all three in parallel using Mutiny
+`Uni.join().all()` with `Infrastructure.getDefaultWorkerPool()`.
+`StructuredTaskScope` was considered (virtual threads) but is still
+preview in Java 25. Mutiny is already a Quarkus dependency.
 
 ---
 

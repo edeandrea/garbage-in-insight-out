@@ -1,7 +1,8 @@
 package dev.ericdeandrea.docling.ai;
 
-import dev.ericdeandrea.docling.model.Mode;
 import jakarta.enterprise.context.RequestScoped;
+
+import dev.ericdeandrea.docling.model.Mode;
 
 @RequestScoped
 class CurrentMode {

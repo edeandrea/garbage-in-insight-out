@@ -2,12 +2,15 @@ package dev.ericdeandrea.docling.ai;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.ericdeandrea.docling.model.Mode;
+import jakarta.inject.Inject;
+
+import org.junit.jupiter.api.Test;
+
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ManagedContext;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
+
+import dev.ericdeandrea.docling.model.Mode;
 
 @QuarkusTest
 class CurrentModeTest {

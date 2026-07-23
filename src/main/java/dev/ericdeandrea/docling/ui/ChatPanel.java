@@ -16,6 +16,7 @@ import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+
 import dev.ericdeandrea.docling.ai.AssistantService;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.ChunksRetrievedEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.CompletedEvent;

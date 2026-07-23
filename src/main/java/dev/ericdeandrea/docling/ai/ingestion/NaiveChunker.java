@@ -4,11 +4,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import dev.ericdeandrea.docling.ai.RagConfig;
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 import dev.langchain4j.data.segment.TextSegment;
-import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 class NaiveChunker implements ChunkingStrategy {

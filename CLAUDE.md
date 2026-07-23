@@ -8,6 +8,10 @@ built and maintained by the docling-java / quarkus-docling project lead.
 - Build: Maven, single-module Quarkus application. Different concerns
   (ingestion, chat, etc.) are separated by package, not by module.
 - Language: Java 25
+- Import order: follow `import-order.txt` at the project root.
+  Group order: static, `java`, `javax`, `jakarta`, `org`, `com`, `ai`,
+  `org.apache.commons`, `org.springframework`, `io.quarkus`, `io`,
+  then everything else (`dev`, etc.). Blank line between groups.
 - Primary: Quarkus + LangChain4j (this is the main live demo)
 - Secondary: a short Spring AI code sample only, for a slide/screen flash,
   not a full runnable app

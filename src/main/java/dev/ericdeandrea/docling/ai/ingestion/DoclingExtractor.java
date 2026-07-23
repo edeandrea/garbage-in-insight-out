@@ -9,18 +9,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import ai.docling.core.DoclingDocument;
 import ai.docling.core.DoclingDocument.BaseTextItem;
 import ai.docling.core.DoclingDocument.ProvenanceItem;
 import ai.docling.core.DoclingDocument.TableItem;
 import ai.docling.serve.api.convert.request.options.OutputFormat;
 import ai.docling.serve.api.convert.response.InBodyConvertDocumentResponse;
+
+import io.quarkiverse.docling.runtime.client.DoclingService;
+
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
-import io.quarkiverse.docling.runtime.client.DoclingService;
-import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 class DoclingExtractor implements ExtractionStrategy {

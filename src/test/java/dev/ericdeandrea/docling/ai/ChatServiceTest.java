@@ -4,13 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 
-import dev.ericdeandrea.docling.model.Mode;
-import io.quarkus.arc.Arc;
-import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import io.quarkus.arc.Arc;
+import io.quarkus.test.junit.QuarkusTest;
+
+import dev.ericdeandrea.docling.model.Mode;
 
 @QuarkusTest
 class ChatServiceTest {

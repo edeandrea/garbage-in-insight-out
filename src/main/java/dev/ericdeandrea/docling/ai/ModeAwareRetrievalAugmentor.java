@@ -2,6 +2,10 @@ package dev.ericdeandrea.docling.ai;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
+
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -11,8 +15,6 @@ import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import io.quarkiverse.langchain4j.EmbeddingStoreName;
-import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 class ModeAwareRetrievalAugmentor implements RetrievalAugmentor {

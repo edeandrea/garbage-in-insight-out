@@ -1,12 +1,14 @@
 package dev.ericdeandrea.docling.ai;
 
-import dev.langchain4j.service.MemoryId;
-import dev.langchain4j.service.SystemMessage;
-import dev.langchain4j.service.UserMessage;
+import jakarta.enterprise.context.SessionScoped;
+
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
 import io.smallrye.mutiny.Multi;
-import jakarta.enterprise.context.SessionScoped;
+
+import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
 
 @SessionScoped
 @RegisterAiService

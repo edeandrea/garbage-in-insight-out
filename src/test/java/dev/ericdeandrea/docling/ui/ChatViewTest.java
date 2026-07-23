@@ -2,10 +2,13 @@ package dev.ericdeandrea.docling.ui;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
-import dev.ericdeandrea.docling.model.Mode;
-import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
+
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
+
+import io.quarkus.test.junit.QuarkusTest;
+
+import dev.ericdeandrea.docling.model.Mode;
 
 @QuarkusTest
 class ChatViewTest extends QuarkusBrowserlessTest {

@@ -2,14 +2,17 @@ package dev.ericdeandrea.docling.ai;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.inject.Inject;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+
+import io.quarkus.test.junit.QuarkusTest;
+
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.query.Metadata;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 
 @QuarkusTest
 class ModeAwareRetrievalAugmentorTest {

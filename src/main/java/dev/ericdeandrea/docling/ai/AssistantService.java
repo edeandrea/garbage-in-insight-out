@@ -3,6 +3,14 @@ package dev.ericdeandrea.docling.ai;
 import java.time.Instant;
 import java.util.UUID;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent.ChatCompletedEvent;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent.ContentFetchedEvent;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent.PartialResponseEvent;
+import io.smallrye.mutiny.Multi;
+
 import dev.ericdeandrea.docling.mapping.ChunkMapper;
 import dev.ericdeandrea.docling.model.ChatResponseEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.ChunksRetrievedEvent;
@@ -10,12 +18,6 @@ import dev.ericdeandrea.docling.model.ChatResponseEvent.CompletedEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.TokenEvent;
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.rag.content.ContentMetadata;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent.ChatCompletedEvent;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent.ContentFetchedEvent;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent.PartialResponseEvent;
-import io.smallrye.mutiny.Multi;
-import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class AssistantService {
