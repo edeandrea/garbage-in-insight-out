@@ -9,6 +9,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import dev.ericdeandrea.docling.ai.AssistantService;
 import dev.ericdeandrea.docling.model.Mode;
 
 @Route("")
@@ -17,8 +18,11 @@ public class ChatView extends VerticalLayout {
     private final Map<Mode, ChatPanel> panels = new EnumMap<>(Mode.class);
     private final Map<Mode, Button> toggleButtons = new EnumMap<>(Mode.class);
     private final HorizontalLayout panelContainer;
+    private final AssistantService assistantService;
 
-    public ChatView() {
+    public ChatView(AssistantService assistantService) {
+        this.assistantService = assistantService;
+
         setSizeFull();
         setPadding(true);
 
@@ -54,7 +58,7 @@ public class ChatView extends VerticalLayout {
             panels.remove(mode);
             toggleButtons.get(mode).removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
         } else {
-            var panel = new ChatPanel(mode);
+            var panel = new ChatPanel(mode, assistantService);
             panels.put(mode, panel);
             panelContainer.add(panel);
             toggleButtons.get(mode).addThemeVariants(ButtonVariant.LUMO_PRIMARY);

@@ -188,7 +188,7 @@ Status: Approved
        `QuarkusBrowserlessTest` verifying panels can be added/removed
        independently.
 
-- [ ] 19. **Build per-panel chat view with streaming** — Implement chat
+- [x] 19. **Build per-panel chat view with streaming** — Implement chat
        within each panel using the approach from task 17. Each panel has
        its own `MessageInput`, `MessageList`, and conversation history.
        On submit: generate UUID, call `AssistantService` (which sets
@@ -197,7 +197,7 @@ Status: Approved
        via Vaadin push. Write a `QuarkusBrowserlessTest` verifying the
        streaming lifecycle.
 
-- [ ] 20. **Build retrieved chunks display with metadata** — Add a
+- [x] 20. **Build retrieved chunks display with metadata** — Add a
        "retrieved chunks" section to each panel. On
        `ChunksRetrievedEvent` (from `AssistantService`), render each
        chunk with: text, relevance score, segment metadata (page number,

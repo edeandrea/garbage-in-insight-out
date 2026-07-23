@@ -840,3 +840,21 @@ mode: A, B, C). Clicking a button shows/hides that mode's panel.
 **Rationale:** Toggle buttons are one-click, visible at all times,
 and naturally enforce the one-panel-per-type constraint. Default to
 Mode A for the cold-open demo beat.
+
+---
+
+## 53. [2026-07-23 09:45 EDT]: Chunk display as expandable rows with timestamp
+
+**Question:** How should retrieved chunks be displayed in each panel?
+
+**Options considered:**
+- Grid/table with columns (compact, scannable)
+- Expandable rows (collapsed summary, click to expand full text)
+- Cards with metadata badges
+
+**Original decision:** Expandable rows (Option B).
+
+**Revised [2026-07-23 09:47 EDT]:** Combine A and B — a Grid/table
+with columns (score, page, type, label, timestamp, text preview) where
+clicking a row expands to show the full chunk text. Best of both:
+scannable metadata columns + full text on demand.
