@@ -412,3 +412,109 @@ See [decision 48](decisions.md) for the full rationale.
 - `src/test/java/.../ChunkSizeSimulationTest.java` — chunk size sweep
 - `src/test/java/.../ChunkSizeValidationTest.java` — initial Table 2 inspection
 - `src/test/java/.../ModeAvsModeBTest.java` — A vs B comparison
+
+---
+
+## Task 13: Create CurrentMode request-scoped bean
+
+### Package
+
+`dev.ericdeandrea.docling.ai`
+
+### Class
+
+`CurrentMode` — `@RequestScoped` CDI bean holding a `Mode` value.
+`AssistantService` sets it before calling `ChatService`
+([decision 34](decisions.md)). The UI never touches it directly.
+
+Simple getter/setter — no constructor injection needed since this is
+a mutable state holder.
+
+### Test
+
+`@QuarkusTest` that injects `CurrentMode`, sets a mode, and verifies
+it holds within the request scope.
+
+---
+
+## Task 14: Implement ModeAwareRetrievalAugmentor
+
+### Approach
+
+Implement `RetrievalAugmentor` directly. On each `augment()` call:
+1. Read `CurrentMode` to determine which store to query
+2. Build an `EmbeddingStoreContentRetriever` for that store
+3. Delegate to `DefaultRetrievalAugmentor` with that retriever
+
+### Injected beans
+
+- `CurrentMode` — which mode is active for this request
+- Three named `EmbeddingStore<TextSegment>` via `@EmbeddingStoreName`
+- `EmbeddingModel` — for embedding the query
+- `RagConfig` — for top-k
+
+### Prompt augmentation
+
+Uses the grounding template from the plan:
+> Use the following context to answer the user's question. If the
+> answer is not in the context, say you don't have enough information
+> to answer.
+
+### Test
+
+`@QuarkusTest` verifying the correct store is selected for each mode.
+
+---
+
+## Task 15: Implement ChatService (package-private)
+
+### Package
+
+`dev.ericdeandrea.docling.ai`
+
+### Class
+
+`ChatService` — package-private `@SessionScoped` `@RegisterAiService`
+interface. Since `ModeAwareRetrievalAugmentor` is the only
+`RetrievalAugmentor` bean, Quarkus auto-wires it (no explicit
+`retrievalAugmentor` attribute needed).
+
+Method: `Multi<ChatEvent> chat(@MemoryId Object memoryId, @UserMessage String message)`
+
+System prompt: the grounding template from the plan — `@SystemMessage`.
+
+### Test
+
+`@QuarkusTest` verifying the bean is injectable and session-scoped.
+Uses `Arc.container().sessionContext().activate()` for session context
+([decision 50](decisions.md)).
+
+---
+
+## Task 16: Implement AssistantService (public chat API)
+
+### Package
+
+`dev.ericdeandrea.docling.ai` (public-facing bean)
+`dev.ericdeandrea.docling.model` (ChatResponseEvent sealed interface)
+
+### Model types added
+
+`ChatResponseEvent` — sealed interface with:
+- `TokenEvent(text)` — from `PartialResponseEvent.getChunk()`
+- `ChunksRetrievedEvent(List<RetrievedChunk>)` — from
+  `ContentFetchedEvent.getContent()` mapped via `ChunkMapper`
+- `CompletedEvent` — from `ChatCompletedEvent`
+
+### AssistantService
+
+Public `@ApplicationScoped` bean. Method:
+`Multi<ChatResponseEvent> chat(Mode mode, UUID memoryId, String message)`
+
+Internally: sets `CurrentMode`, calls `ChatService.chat()`, maps
+`ChatEvent`s to `ChatResponseEvent`s.
+
+### Test
+
+`@QuarkusTest` with session context activation, verifying event mapping
+across all three modes.

@@ -127,13 +127,13 @@ Status: Approved
        `DocumentBySentenceSplitter` alone. Document the chosen `maxTokens`
        value.
 
-- [ ] 13. **Create CurrentMode request-scoped bean** — Create `CurrentMode`
+- [x] 13. **Create CurrentMode request-scoped bean** — Create `CurrentMode`
        as a `@RequestScoped` CDI bean in `dev.ericdeandrea.docling.ai`
        holding a `Mode` value. Provide getter/setter. Write a `@QuarkusTest`
        verifying the bean is injectable and holds the mode within a request
        scope.
 
-- [ ] 14. **Implement ModeAwareRetrievalAugmentor** — Create in
+- [x] 14. **Implement ModeAwareRetrievalAugmentor** — Create in
        `dev.ericdeandrea.docling.ai`, implementing `RetrievalAugmentor`
        directly. Inject `CurrentMode` and the three named pgvector
        `EmbeddingStore` instances. On each request, select the correct
@@ -142,7 +142,7 @@ Status: Approved
        template. Write a test verifying the correct store is selected for
        each mode value.
 
-- [ ] 15. **Implement ChatService (package-private)** — Create as a
+- [x] 15. **Implement ChatService (package-private)** — Create as a
        package-private `@SessionScoped` `@RegisterAiService` interface in
        `dev.ericdeandrea.docling.ai`. Configure with
        `ModeAwareRetrievalAugmentor`. Chat method accepts `@MemoryId` UUID
@@ -151,7 +151,7 @@ Status: Approved
        prompt to the grounding template. Write a test verifying the AI
        service bean is injectable and session-scoped.
 
-- [ ] 16. **Implement AssistantService (public chat API)** — Create
+- [x] 16. **Implement AssistantService (public chat API)** — Create
        `AssistantService` as the public-facing bean in
        `dev.ericdeandrea.docling.ai`. Its chat method accepts a `Mode`,
        a memory ID (UUID), and a user message. Internally it sets the

@@ -779,3 +779,23 @@ and propagate the resolved collection name into runtime config.
 **Action:** Monitor PR status. If merged before we resume
 implementation, refactor `IngestionStartup` to remove manual collection
 creation and update `application.yml`.
+
+---
+
+## 50. [2026-07-23 08:50 EDT]: Session context activation in tests
+
+**Question:** `ChatService` is `@SessionScoped` (for Vaadin WebSocket
+session scoping). `@QuarkusTest` doesn't have an active session
+context, causing `ContextNotActiveException`.
+
+**Options considered:**
+- Switch `ChatService` to `@ApplicationScoped` — breaks the Vaadin
+  session lifecycle model
+- Mock a WebSocket request — complex test setup
+- Activate session context programmatically — simple, direct
+
+**Decision:** Use `Arc.container().sessionContext().activate()` in
+`@BeforeEach` and `deactivate()` in `@AfterEach` for tests that
+need `@SessionScoped` beans. Keep `ChatService` as `@SessionScoped`
+for the production Vaadin use case. The Undertow extension (pulled
+in by Vaadin) provides the session context implementation.
