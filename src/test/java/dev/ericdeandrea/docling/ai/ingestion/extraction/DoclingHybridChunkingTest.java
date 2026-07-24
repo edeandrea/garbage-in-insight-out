@@ -41,4 +41,28 @@ class DoclingHybridChunkingTest {
                 assertThat(segment.metadata().getInteger("page_number")).isNotNull()
             );
     }
+
+    @Test
+    void chunksHaveElementTypeFromDocItems() {
+        var segments = doclingExtractor.extractAndChunk(Path.of("fixtures/doclaynet-2206.01062v1.pdf"))
+            .await()
+            .atMost(Duration.ofMinutes(5));
+
+        assertThat(segments)
+            .anySatisfy(segment ->
+                assertThat(segment.metadata().getString("element_type"))
+                    .as("At least one chunk should have an element_type")
+                    .isNotNull()
+            );
+
+        var elementTypes = segments.stream()
+            .map(segment -> segment.metadata().getString("element_type"))
+            .filter(java.util.Objects::nonNull)
+            .distinct()
+            .toList();
+
+        assertThat(elementTypes)
+            .as("Should contain a variety of element types")
+            .hasSizeGreaterThan(1);
+    }
 }

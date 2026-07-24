@@ -137,10 +137,10 @@ The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeand
 
 ## Tech Stack
 
-- **Quarkus 3.37.3** — runtime
-- **LangChain4j 1.12.0** — RAG pipeline, AI services
-- **Docling** (`quarkus-docling 1.4.0`) — document extraction and hybrid chunking
+- **Quarkus** — runtime
+- **LangChain4j** — RAG pipeline, AI services
+- **Docling** (`quarkus-docling`) — document extraction and hybrid chunking
 - **Qdrant** — vector store (three named collections, one per mode)
-- **Vaadin 25.2.3** — pure-Java chat UI with streaming
+- **Vaadin** — pure-Java chat UI with streaming
 - **MapStruct** — type-safe mapping between AI and UI layers
 - **WireMock** — LLM chat stubbing in tests

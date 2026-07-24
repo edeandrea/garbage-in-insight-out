@@ -68,6 +68,7 @@ class CaptureDoclingResponsesTest {
     void captureChunkingResponse() throws Exception {
         var request = HybridChunkDocumentRequest.builder()
             .options(JSON_OPTIONS)
+            .includeConvertedDoc(true)
             .build();
 
         var response = doclingServeApi.chunkFilesWithHybridChunkerAsync(request, FIXTURE)

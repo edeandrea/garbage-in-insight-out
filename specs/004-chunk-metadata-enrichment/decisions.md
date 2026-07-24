@@ -160,3 +160,43 @@ during implementation via dev services?
 **Decision:** Attempt during implementation. Dev services should start a
 Docling Serve container automatically. If it fails, fall back to manual
 capture.
+
+---
+
+## 11. [2026-07-24 16:45 EDT]: Resolve Mode C table captions from DoclingDocument
+
+**Question:** The hybrid chunker returns empty `captions` for all 22
+table-related chunks in the test document, even though 4 of 5 tables
+have caption `$ref`s in the DoclingDocument. Should we resolve captions
+from the document model?
+
+**Analysis:** `chunk.getCaptions()` is empty for every chunk in
+`docling-chunk-response.json` (0 out of 74 have captions). This
+contradicts the earlier finding (decision #8) that "chunk.getCaptions()
+already returns the same data pre-resolved" — in practice the hybrid
+chunker doesn't populate captions on chunks at all for this document.
+Since `includeConvertedDoc(true)` now provides the DoclingDocument, we
+can resolve table captions via `DocItemIndex.captionTextFor()` for
+chunks whose `docItems` reference a table.
+
+**Decision:** Yes. For Mode C chunks referencing a table (via
+`docItems`), resolve the table's caption from the DoclingDocument using
+the same `DocItemIndex.captionTextFor()` approach as Mode B. This
+supersedes decision #8.
+
+---
+
+## 12. [2026-07-24 17:00 EDT]: Include extended\_content in LLM context
+
+**Question:** Mode B can't answer the planted question about Table 2
+because the naive chunker splits the table data into separate chunks
+that don't rank high enough in topK=4 retrieval. The `extended_content`
+metadata (2 neighboring segments before and after) is stored on each
+chunk but never passed to the LLM — only used for embedding context.
+Should we enhance the augmentor to include `extended_content` in the
+text passed to the LLM?
+
+**Decision:** Yes. Configure a custom `ContentInjector` on the
+`DefaultRetrievalAugmentor` that includes `extended_content` alongside
+the segment text. This gives the LLM broader context per chunk without
+increasing topK. Added to spec 004 scope.

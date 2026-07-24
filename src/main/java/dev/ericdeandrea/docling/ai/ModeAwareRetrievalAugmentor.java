@@ -1,5 +1,6 @@
 package dev.ericdeandrea.docling.ai;
 
+import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,6 +15,7 @@ import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.content.injector.DefaultContentInjector;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 
@@ -66,8 +68,13 @@ class ModeAwareRetrievalAugmentor implements RetrievalAugmentor {
             .maxResults(topK)
             .build();
 
+        var contentInjector = DefaultContentInjector.builder()
+            .metadataKeysToInclude(List.of("extended_content"))
+            .build();
+
         return DefaultRetrievalAugmentor.builder()
             .contentRetriever(retriever)
+            .contentInjector(contentInjector)
             .build();
     }
 }

@@ -36,8 +36,7 @@ class NaiveChunkerTest {
         var text = "Page one content here. Page two content follows.";
         var document = Document.from(text);
         var provenance = List.of(
-            new ProvenanceEntry(0, 22, 1, "PARAGRAPH", null),
-            new ProvenanceEntry(23, 48, 2, "PARAGRAPH", null)
+            new ProvenanceEntry(0, 48, 1, "CAPTION", "Table 1: Results overview")
         );
         var result = new ExtractionResult(document, provenance);
 
@@ -50,9 +49,12 @@ class NaiveChunkerTest {
             );
 
         assertThat(segments)
-            .anySatisfy(segment ->
-                assertThat(segment.metadata().getInteger("page_number")).isNotNull()
-            );
+            .anySatisfy(segment -> {
+                assertThat(segment.metadata().getInteger("page_number")).isEqualTo(1);
+                assertThat(segment.metadata().getString("element_type")).isEqualTo("CAPTION");
+                assertThat(segment.metadata().getString("element_label"))
+                    .isEqualTo("Table 1: Results overview");
+            });
     }
 
     @Test

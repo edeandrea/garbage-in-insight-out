@@ -11,6 +11,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import ai.docling.core.DoclingDocument;
 import ai.docling.core.DoclingDocument.BaseTextItem;
+import ai.docling.core.DoclingDocument.DocItemLabel;
 import ai.docling.core.DoclingDocument.ProvenanceItem;
 import ai.docling.core.DoclingDocument.TableItem;
 import ai.docling.serve.api.DoclingServeApi;
@@ -80,13 +81,19 @@ public class DoclingExtractor {
     }
 
     private List<ProvenanceEntry> buildProvenance(DoclingDocument doc, String fullText) {
+        var index = DocItemIndex.of(doc);
+
         var textEntries = doc.getTexts().stream()
-            .map(item -> toProvenanceEntry(item.getText(), item.getLabel().toString(), item.getProv(), fullText));
+            .map(item -> {
+                var elementLabel = (item.getLabel() == DocItemLabel.CAPTION) ? item.getText() : null;
+                return toProvenanceEntry(item.getText(), item.getLabel().toString(), elementLabel, item.getProv(), fullText);
+            });
 
         var tableEntries = doc.getTables().stream()
             .map(table -> toProvenanceEntry(
                 tableToText(table),
                 Objects.requireNonNullElse(table.getLabel(), "TABLE"),
+                index.captionTextFor(table).orElse(null),
                 table.getProv(),
                 fullText));
 
@@ -96,6 +103,7 @@ public class DoclingExtractor {
     }
 
     private Optional<ProvenanceEntry> toProvenanceEntry(String itemText, String elementType,
+                                                        String elementLabel,
                                                         List<ProvenanceItem> provItems, String fullText) {
         return Optional.ofNullable(itemText)
             .filter(text -> !text.isEmpty())
@@ -107,33 +115,52 @@ public class DoclingExtractor {
                     .findFirst()
                     .orElse(null);
 
-                return new ProvenanceEntry(startChar, startChar + itemText.length(), pageNumber, elementType, null);
+                return new ProvenanceEntry(startChar, startChar + itemText.length(), pageNumber, elementType, elementLabel);
             });
     }
 
     public Uni<List<TextSegment>> extractAndChunk(Path documentPath) {
         var request = HybridChunkDocumentRequest.builder()
             .options(JSON_OPTIONS)
+            .includeConvertedDoc(true)
             .build();
 
         return Uni.createFrom()
             .completionStage(() -> this.doclingServeApi.chunkFilesWithHybridChunkerAsync(request, documentPath))
-            .map(response -> response.getChunks()
-                .stream()
-                .map(chunk -> {
-                    var metadata = new Metadata()
-                        .put("mode", Mode.DOCLING_HYBRID_CHUNK.name());
+            .map(response -> {
+                var index = DocItemIndex.of(
+                    response.getDocuments().getFirst().getContent().getJsonContent()
+                );
 
-                    if ((chunk.getPageNumbers() != null) && !chunk.getPageNumbers().isEmpty()) {
-                        metadata.put("page_number", chunk.getPageNumbers().getFirst());
-                    }
+                return response.getChunks()
+                    .stream()
+                    .map(chunk -> {
+                        var metadata = new Metadata()
+                            .put("mode", Mode.DOCLING_HYBRID_CHUNK.name());
 
-                    if ((chunk.getCaptions() != null) && !chunk.getCaptions().isEmpty()) {
-                        metadata.put("element_label", chunk.getCaptions().getFirst());
-                    }
+                        if ((chunk.getPageNumbers() != null) && !chunk.getPageNumbers().isEmpty()) {
+                            metadata.put("page_number", chunk.getPageNumbers().getFirst());
+                        }
 
-                    return TextSegment.from(chunk.getText(), metadata);
-                })
-                .toList());
+                        if ((chunk.getDocItems() != null) && !chunk.getDocItems().isEmpty()) {
+                            var firstRef = chunk.getDocItems().getFirst();
+
+                            index.labelFor(firstRef)
+                                .ifPresent(label -> metadata.put("element_type", label));
+
+                            var caption = ((chunk.getCaptions() != null) && !chunk.getCaptions().isEmpty())
+                                ? Optional.of(chunk.getCaptions().getFirst())
+                                : index.resolvedCaptionFor(firstRef);
+
+                            caption.ifPresent(text -> metadata.put("element_label", text));
+                        }
+                        else if ((chunk.getCaptions() != null) && !chunk.getCaptions().isEmpty()) {
+                            metadata.put("element_label", chunk.getCaptions().getFirst());
+                        }
+
+                        return TextSegment.from(chunk.getText(), metadata);
+                    })
+                    .toList();
+            });
     }
 }

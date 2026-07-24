@@ -88,24 +88,34 @@ class ChatPanel {
         var grid = new Grid<>(ChunkRow.class, false);
 
         grid.addColumn(row -> "%.2f".formatted(row.chunk().metadata().relevanceScore()))
-            .setHeader(headerWithTooltip("Score")).setFlexGrow(0).setWidth("90px").setResizable(true);
+            .setHeader(headerWithTooltip("Score")).setFlexGrow(0).setWidth("90px").setResizable(true)
+            .setTooltipGenerator(row -> "%.2f".formatted(row.chunk().metadata().relevanceScore()));
         grid.addColumn(row -> (row.chunk().metadata().pageNumber() != null)
                 ? row.chunk().metadata().pageNumber().toString() : "—")
-            .setHeader(headerWithTooltip("Page")).setFlexGrow(0).setWidth("80px").setResizable(true);
+            .setHeader(headerWithTooltip("Page")).setFlexGrow(0).setWidth("80px").setResizable(true)
+            .setTooltipGenerator(row -> (row.chunk().metadata().pageNumber() != null)
+                ? row.chunk().metadata().pageNumber().toString() : "—");
         grid.addColumn(row -> (row.chunk().metadata().elementType() != null)
                 ? row.chunk().metadata().elementType() : "—")
-            .setHeader(headerWithTooltip("Type")).setFlexGrow(0).setWidth("100px").setResizable(true);
+            .setHeader(headerWithTooltip("Type")).setFlexGrow(0).setWidth("100px").setResizable(true)
+            .setTooltipGenerator(row -> (row.chunk().metadata().elementType() != null)
+                ? row.chunk().metadata().elementType() : "—");
         grid.addColumn(row -> (row.chunk().metadata().elementLabel() != null)
                 ? row.chunk().metadata().elementLabel() : "")
-            .setHeader(headerWithTooltip("Label")).setFlexGrow(0).setWidth("90px").setResizable(true);
+            .setHeader(headerWithTooltip("Label")).setFlexGrow(0).setWidth("90px").setResizable(true)
+            .setTooltipGenerator(row -> (row.chunk().metadata().elementLabel() != null)
+                ? row.chunk().metadata().elementLabel() : "");
         grid.addColumn(row -> (row.chunk().metadata().timestamp() != null)
                 ? TIMESTAMP_FORMAT.format(row.chunk().metadata().timestamp()) : "")
-            .setHeader(headerWithTooltip("Time")).setFlexGrow(0).setWidth("110px").setResizable(true);
+            .setHeader(headerWithTooltip("Time")).setFlexGrow(0).setWidth("110px").setResizable(true)
+            .setTooltipGenerator(row -> (row.chunk().metadata().timestamp() != null)
+                ? TIMESTAMP_FORMAT.format(row.chunk().metadata().timestamp()) : "");
         grid.addColumn(row -> {
                 var text = row.chunk().text();
                 return (text.length() > 80) ? "%s...".formatted(text.substring(0, 80)) : text;
             })
-            .setHeader(headerWithTooltip("Preview")).setFlexGrow(1).setAutoWidth(true).setResizable(true);
+            .setHeader(headerWithTooltip("Preview")).setFlexGrow(1).setAutoWidth(true).setResizable(true)
+            .setTooltipGenerator(row -> row.chunk().text());
 
         grid.setItemDetailsRenderer(new ComponentRenderer<>(row -> {
             var pre = new Pre(row.chunk().text());
