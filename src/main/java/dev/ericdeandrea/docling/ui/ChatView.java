@@ -13,17 +13,28 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.page.ColorScheme;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility.Border;
+import com.vaadin.flow.theme.lumo.LumoUtility.BorderColor;
+import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
+import com.vaadin.flow.theme.lumo.LumoUtility.Position;
+import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
+import com.vaadin.flow.theme.lumo.LumoUtility.ZIndex;
 
 import dev.ericdeandrea.docling.ai.AssistantService;
 import dev.ericdeandrea.docling.model.Mode;
 
 @Route("")
+@PageTitle("Garbage In, Insight Out")
 public class ChatView extends VerticalLayout {
 
     private final Map<Mode, ChatPanel> panels = new EnumMap<>(Mode.class);
     private final Map<Mode, Button> toggleButtons = new EnumMap<>(Mode.class);
-    private final HorizontalLayout panelContainer;
+    private final HorizontalLayout messageContainer;
+    private final HorizontalLayout chunksContainer;
     private final AssistantService assistantService;
     private boolean isDarkMode;
 
@@ -31,39 +42,71 @@ public class ChatView extends VerticalLayout {
         this.assistantService = assistantService;
 
         setSizeFull();
-        setPadding(true);
+        setPadding(false);
 
         var toolbar = createToolbar();
-        panelContainer = new HorizontalLayout();
-        panelContainer.setSizeFull();
-        panelContainer.setSpacing(true);
 
-        add(toolbar, panelContainer);
-        expand(panelContainer);
+        this.messageContainer = new HorizontalLayout();
+        this.messageContainer.setSizeFull();
+        this.messageContainer.setSpacing(true);
+
+        this.chunksContainer = new HorizontalLayout();
+        this.chunksContainer.setSizeFull();
+        this.chunksContainer.setSpacing(true);
+
+        var splitLayout = new SplitLayout(Orientation.VERTICAL);
+        splitLayout.setSizeFull();
+        splitLayout.addToPrimary(this.messageContainer);
+        splitLayout.addToSecondary(this.chunksContainer);
+        splitLayout.setSplitterPosition(70);
+
+        add(toolbar, splitLayout);
+        expand(splitLayout);
 
         toggleMode(Mode.NAIVE);
     }
 
-    private HorizontalLayout createToolbar() {
-        var toolbar = new HorizontalLayout();
-        toolbar.setWidthFull();
-        toolbar.setAlignItems(FlexComponent.Alignment.CENTER);
-        toolbar.add(new H2("Garbage In, Insight Out"));
-
-        for (var mode : Mode.values()) {
-            var button = new Button(mode.displayLabel(), _ -> toggleMode(mode));
-            this.toggleButtons.put(mode, button);
-            toolbar.add(button);
-        }
+    private VerticalLayout createToolbar() {
+        var title = new H2("Garbage In, Insight Out");
+        title.addClassNames(Whitespace.NOWRAP, Margin.NONE);
+        title.getStyle().set("font-size", "var(--lumo-font-size-xl)");
 
         var themeToggle = new Button(VaadinIcon.ADJUST.create(), _ -> toggleTheme());
         themeToggle.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         themeToggle.setTooltipText("Toggle light/dark mode");
 
-        var spacer = new HorizontalLayout();
-        spacer.setWidthFull();
-        toolbar.add(spacer, themeToggle);
-        toolbar.expand(spacer);
+        var topRow = new HorizontalLayout(title, themeToggle);
+        topRow.setWidthFull();
+        topRow.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        topRow.setAlignItems(FlexComponent.Alignment.CENTER);
+        topRow.setFlexShrink(0, title);
+        topRow.expand(title);
+        title.getStyle().set("text-align", "center");
+
+        var bottomRow = new HorizontalLayout();
+        bottomRow.setWidthFull();
+        bottomRow.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+
+        for (var mode : Mode.values()) {
+            var button = new Button(mode.displayLabel(), _ -> toggleMode(mode));
+            this.toggleButtons.put(mode, button);
+            bottomRow.add(button);
+        }
+
+        var toolbar = new VerticalLayout(topRow, bottomRow);
+        toolbar.setWidthFull();
+        toolbar.setPadding(false);
+        toolbar.setSpacing(false);
+        toolbar.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        toolbar.addClassNames(
+            "sticky-toolbar",
+            Position.STICKY,
+            Position.Top.NONE,
+            ZIndex.SMALL,
+            Border.BOTTOM,
+            BorderColor.CONTRAST_30
+        );
 
         return toolbar;
     }
@@ -83,15 +126,42 @@ public class ChatView extends VerticalLayout {
 
     void toggleMode(Mode mode) {
         if (this.panels.containsKey(mode)) {
-            this.panelContainer.remove(this.panels.get(mode));
+            var panel = this.panels.get(mode);
+            this.messageContainer.remove(panel.messageArea());
+            this.chunksContainer.remove(panel.chunksArea());
             this.panels.remove(mode);
             this.toggleButtons.get(mode).removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
         }
         else {
             var panel = new ChatPanel(mode, this.assistantService);
             this.panels.put(mode, panel);
-            this.panelContainer.add(panel);
+            this.messageContainer.add(panel.messageArea());
+            this.chunksContainer.add(panel.chunksArea());
             this.toggleButtons.get(mode).addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        }
+
+        updatePanelBorders();
+    }
+
+    private void updatePanelBorders() {
+        applyBordersBetween(this.messageContainer);
+        applyBordersBetween(this.chunksContainer);
+    }
+
+    private void applyBordersBetween(HorizontalLayout container) {
+        var children = container.getChildren().toList();
+
+        for (var i = 0; i < children.size(); i++) {
+            var style = children.get(i).getStyle();
+
+            if ((i > 0) && (children.size() >= 2)) {
+                style.set("border-inline-start", "1px solid var(--lumo-contrast-30pct)");
+            }
+            else {
+                style.remove("border-inline-start");
+            }
+
+            style.remove("border-inline-end");
         }
     }
 

@@ -220,3 +220,39 @@ this test?
 
 **Decision:** `ChatPanelTest`. The header label is ChatPanel behavior,
 not layout structure.
+
+---
+
+## 14. [2026-07-24 14:12 EDT]: Two-row toolbar with smaller title font
+
+**Question:** The title "Garbage In, Insight Out" still wraps despite
+`Whitespace.NOWRAP` and `flex-shrink: 0` when all three mode buttons are
+visible. How should the toolbar be restructured?
+
+**Decision:** Restructure the toolbar into two centered rows:
+- Row 1: title (centered, smaller font `--lumo-font-size-xl`) + theme
+  toggle (right-justified).
+- Row 2: mode buttons (centered).
+
+The toolbar changes from a single `HorizontalLayout` to a
+`VerticalLayout` containing two `HorizontalLayout` rows. This is a
+refinement of reqs 4 (non-wrapping title) and 7 (sticky toolbar).
+
+---
+
+## 15. [2026-07-24 15:03 EDT]: Defer metadata label/type investigation to separate spec
+
+**Question:** During implementation, we discovered that `elementLabel` is
+always null for Mode B (hardcoded `null` in
+`DoclingExtractor.toProvenanceEntry()`) and `elementType` is always null
+for Mode C (hybrid chunker API doesn't expose it). Should we fix this in
+spec 002 or defer?
+
+**Decision:** Defer to a separate spec. The fix involves the ingestion
+pipeline (DoclingExtractor, provenance model, possibly DoclingServeApi
+options), which is outside the scope of UI polish. The investigation
+found that `TableItem.getCaptions()` in the Docling document model
+contains usable labels (e.g., "Table 1", "Table 2") that could populate
+`elementLabel` for Mode B, but resolving `$ref` caption references
+requires cross-referencing against `doc.getTexts()`. A new spec should
+cover this along with investigating `DoclingServeApi` options.

@@ -7,7 +7,7 @@ quarkus:
         level: WARN
       "io.quarkiverse.wiremock":
         level: WARN
-      "com.vaading.flow.server.frontend":
+      "com.vaadin.flow.server.frontend":
         level: WARN
   langchain4j:
     chat-model:

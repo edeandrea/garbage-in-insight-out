@@ -12,7 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.vaadin.flow.component.ComponentUtil;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageInput.SubmitEvent;
 import com.vaadin.flow.component.messages.MessageList;
@@ -32,10 +34,6 @@ import dev.ericdeandrea.docling.model.ChunkMetadata;
 import dev.ericdeandrea.docling.model.Mode;
 import dev.ericdeandrea.docling.model.RetrievedChunk;
 
-// Tests the ChatPanel's interactive behavior with a mocked AssistantService.
-// The mock returns a deterministic stream of TokenEvent, ChunksRetrievedEvent, and
-// CompletedEvent — no real LLM or Qdrant needed. This lets us verify the UI logic
-// (color bubbles, token accumulation, chunk grid, highlight-on-click) in isolation.
 @QuarkusTest
 class ChatPanelTest extends QuarkusBrowserlessTest {
 
@@ -58,8 +56,6 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             ));
     }
 
-    // Each assistant response gets a rotating color index (round % 9) so
-    // consecutive conversations are visually distinguishable in the message list.
     @Test
     void assistantMessageGetsColorIndex() {
         var view = navigate(ChatView.class);
@@ -67,7 +63,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
 
         fireSubmit(panel, "test question");
 
-        var items = find(MessageList.class, panel).single().getItems();
+        var items = find(MessageList.class, panel.messageArea()).single().getItems();
 
         var assistantItem = items.stream()
             .filter(item -> Mode.NAIVE.displayLabel().equals(item.getUserName()))
@@ -75,12 +71,10 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             .orElseThrow();
 
         assertThat(assistantItem.getUserColorIndex())
-            .as("First round color index should be 1 %% 9 = 1")
+            .as("First round color index should be 1 %% 7 = 1")
             .isEqualTo(1);
     }
 
-    // When ChunksRetrievedEvent arrives, the retrieved chunks grid should
-    // be populated with one row per chunk.
     @Test
     void chunksGridPopulatedAfterResponse() {
         var view = navigate(ChatView.class);
@@ -89,14 +83,12 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         fireSubmit(panel, "test question");
 
         @SuppressWarnings("unchecked")
-        var grid = (Grid<ChunkRow>) find(Grid.class, panel).single();
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
 
         assertThat(grid.getGenericDataView().getItems().toList())
             .hasSize(2);
     }
 
-    // Streaming tokens should accumulate into the assistant message text
-    // as they arrive, building up the full response progressively.
     @Test
     void assistantMessageAccumulatesTokens() {
         var view = navigate(ChatView.class);
@@ -104,7 +96,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
 
         fireSubmit(panel, "test question");
 
-        var items = find(MessageList.class, panel).single().getItems();
+        var items = find(MessageList.class, panel.messageArea()).single().getItems();
 
         var assistantItem = items.stream()
             .filter(item -> Mode.NAIVE.displayLabel().equals(item.getUserName()))
@@ -114,8 +106,6 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         assertThat(assistantItem.getText()).isEqualTo("Hello world!");
     }
 
-    // Verify the color index increments with each conversation round so
-    // the user can visually distinguish which response belongs to which question.
     @Test
     void secondRoundGetsNextColorIndex() {
         var view = navigate(ChatView.class);
@@ -124,7 +114,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         fireSubmit(panel, "first question");
         fireSubmit(panel, "second question");
 
-        var items = find(MessageList.class, panel).single().getItems();
+        var items = find(MessageList.class, panel.messageArea()).single().getItems();
 
         var assistantItems = items.stream()
             .filter(item -> Mode.NAIVE.displayLabel().equals(item.getUserName()))
@@ -135,8 +125,6 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         assertThat(assistantItems.get(1).getUserColorIndex()).isEqualTo(2);
     }
 
-    // Clicking a row in the chunks grid should add the "highlighted" CSS class
-    // to the assistant message from that round, linking the chunk back to its response.
     @Test
     void clickingChunkRowHighlightsAssistantMessage() {
         var view = navigate(ChatView.class);
@@ -144,7 +132,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
 
         fireSubmit(panel, "test question");
 
-        var messageList = find(MessageList.class, panel).single();
+        var messageList = find(MessageList.class, panel.messageArea()).single();
         var assistantItem = messageList.getItems().stream()
             .filter(item -> Mode.NAIVE.displayLabel().equals(item.getUserName()))
             .findFirst()
@@ -155,7 +143,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             .isFalse();
 
         @SuppressWarnings("unchecked")
-        var grid = (Grid<ChunkRow>) find(Grid.class, panel).single();
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
         test(grid).clickRow(0);
 
         assertThat(assistantItem.hasClassName("highlighted"))
@@ -163,9 +151,6 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             .isTrue();
     }
 
-    // When multiple rounds have been submitted, clicking chunks from different
-    // rounds should move the highlight — only one assistant message is highlighted
-    // at a time, and the previous highlight is removed.
     @Test
     void clickingDifferentRoundMovesHighlight() {
         when(this.assistantService.chat(eq(Mode.NAIVE), any(), eq("first")))
@@ -190,7 +175,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         fireSubmit(panel, "first");
         fireSubmit(panel, "second");
 
-        var messageList = find(MessageList.class, panel).single();
+        var messageList = find(MessageList.class, panel.messageArea()).single();
         var assistantItems = messageList.getItems().stream()
             .filter(item -> Mode.NAIVE.displayLabel().equals(item.getUserName()))
             .toList();
@@ -198,10 +183,8 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         assertThat(assistantItems).hasSize(2);
 
         @SuppressWarnings("unchecked")
-        var grid = (Grid<ChunkRow>) find(Grid.class, panel).single();
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
 
-        // Click a row from round 1 (chunks are prepended, so round 2 chunks are at indices 0, round 1 at index 1+)
-        // Round 2 has 1 chunk (index 0), round 1 has 2 chunks (indices 1, 2)
         test(grid).clickRow(1);
 
         assertThat(assistantItems.get(0).hasClassName("highlighted"))
@@ -212,7 +195,6 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             .as("Round 2 message should NOT be highlighted")
             .isFalse();
 
-        // Now click a round 2 chunk
         test(grid).clickRow(0);
 
         assertThat(assistantItems.get(1).hasClassName("highlighted"))
@@ -224,8 +206,86 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             .isFalse();
     }
 
+    @Test
+    void chunksGridHasNoRoundColumn() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+
+        assertThat(grid.getColumns())
+            .as("Grid should have 6 columns (no round column)")
+            .hasSize(6);
+
+        assertThat(grid.getColumns())
+            .extracting(col -> col.getHeaderText())
+            .as("No column should have header '#'")
+            .doesNotContain("#");
+    }
+
+    @Test
+    void allColumnsAreResizable() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+
+        assertThat(grid.getColumns())
+            .as("Every column should be resizable")
+            .allMatch(col -> col.isResizable());
+    }
+
+    @Test
+    void chunkRowsGetPartNameByRound() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "first question");
+        fireSubmit(panel, "second question");
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+        var partNameGenerator = grid.getPartNameGenerator();
+
+        assertThat(partNameGenerator.apply(new ChunkRow(1, MOCK_CHUNKS.getFirst())))
+            .as("Round 1 should produce part name round-color-1")
+            .isEqualTo("round-color-1");
+
+        assertThat(partNameGenerator.apply(new ChunkRow(2, MOCK_CHUNKS.getFirst())))
+            .as("Round 2 should produce part name round-color-2")
+            .isEqualTo("round-color-2");
+    }
+
+    @Test
+    void chunksHeaderShowsCount() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "test question");
+
+        var header = find(Span.class, panel.chunksArea()).single();
+
+        assertThat(header.getText())
+            .isEqualTo("Retrieved Chunks (2)");
+    }
+
+    @Test
+    void noDetailsComponentInChunksArea() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        var hasDetails = panel.chunksArea().getChildren()
+            .anyMatch(child -> child instanceof Details);
+
+        assertThat(hasDetails)
+            .as("No Details component should exist in chunks area")
+            .isFalse();
+    }
+
     private void fireSubmit(ChatPanel panel, String message) {
-        var messageInput = find(MessageInput.class, panel).single();
+        var messageInput = find(MessageInput.class, panel.messageArea()).single();
         ComponentUtil.fireEvent(messageInput, new SubmitEvent(messageInput, false, message));
     }
 }

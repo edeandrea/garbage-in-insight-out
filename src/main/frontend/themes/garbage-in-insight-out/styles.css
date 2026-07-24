@@ -3,3 +3,35 @@ vaadin-message.highlighted {
     border-left: 3px solid var(--lumo-primary-color);
     transition: background-color 0.3s ease;
 }
+
+vaadin-grid::part(round-color-0) {
+    background-color: color-mix(in srgb, var(--vaadin-user-color-0) 15%, transparent);
+}
+
+vaadin-grid::part(round-color-1) {
+    background-color: color-mix(in srgb, var(--vaadin-user-color-1) 15%, transparent);
+}
+
+vaadin-grid::part(round-color-2) {
+    background-color: color-mix(in srgb, var(--vaadin-user-color-2) 15%, transparent);
+}
+
+vaadin-grid::part(round-color-3) {
+    background-color: color-mix(in srgb, var(--vaadin-user-color-3) 15%, transparent);
+}
+
+vaadin-grid::part(round-color-4) {
+    background-color: color-mix(in srgb, var(--vaadin-user-color-4) 15%, transparent);
+}
+
+vaadin-grid::part(round-color-5) {
+    background-color: color-mix(in srgb, var(--vaadin-user-color-5) 15%, transparent);
+}
+
+vaadin-grid::part(round-color-6) {
+    background-color: color-mix(in srgb, var(--vaadin-user-color-6) 15%, transparent);
+}
+
+.sticky-toolbar {
+    background-color: var(--lumo-base-color);
+}
