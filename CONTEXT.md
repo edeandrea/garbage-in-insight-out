@@ -122,3 +122,6 @@ phase, on purpose, so specs survive across sessions and context resets.
   resizable columns, remove `#` column, non-wrapping title, panel
   borders, shared resizable split layout, sticky toolbar.
   Status: Approved.
+- `specs/003-use-docling-serve-api/` — Switch DoclingExtractor and
+  CaptureDoclingResponsesTest from DoclingService wrapper to direct
+  DoclingServeApi usage. Status: Approved, implemented.

@@ -12,11 +12,13 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import ai.docling.serve.api.DoclingServeApi;
+import ai.docling.serve.api.chunk.request.HybridChunkDocumentRequest;
+import ai.docling.serve.api.convert.request.ConvertDocumentRequest;
+import ai.docling.serve.api.convert.request.options.ConvertDocumentOptions;
 import ai.docling.serve.api.convert.request.options.OutputFormat;
 
 import io.quarkus.test.junit.QuarkusTest;
-
-import io.quarkiverse.docling.runtime.client.DoclingService;
 
 // Utility test that captures real Docling Serve responses and writes them to
 // src/test/resources/__files/ — the directory WireMock serves stub responses from.
@@ -35,15 +37,23 @@ class CaptureDoclingResponsesTest {
     private static final Path FIXTURE = Path.of("fixtures/doclaynet-2206.01062v1.pdf");
     private static final Path OUTPUT_DIR = Path.of("src/test/resources/__files");
 
+    private static final ConvertDocumentOptions JSON_OPTIONS = ConvertDocumentOptions.builder()
+        .toFormat(OutputFormat.JSON)
+        .build();
+
     @Inject
-    DoclingService doclingService;
+    DoclingServeApi doclingServeApi;
 
     @Inject
     ObjectMapper objectMapper;
 
     @Test
     void captureConversionResponse() throws IOException {
-        var response = doclingService.convertFile(FIXTURE, OutputFormat.JSON);
+        var request = ConvertDocumentRequest.builder()
+            .options(JSON_OPTIONS)
+            .build();
+
+        var response = doclingServeApi.convertFiles(request, FIXTURE);
         var json = objectMapper.copy()
             .enable(SerializationFeature.INDENT_OUTPUT)
             .writeValueAsString(response);
@@ -53,7 +63,11 @@ class CaptureDoclingResponsesTest {
 
     @Test
     void captureChunkingResponse() throws IOException {
-        var response = doclingService.chunkFileHybrid(FIXTURE, OutputFormat.JSON);
+        var request = HybridChunkDocumentRequest.builder()
+            .options(JSON_OPTIONS)
+            .build();
+
+        var response = doclingServeApi.chunkFilesWithHybridChunker(request, FIXTURE);
         var json = objectMapper.copy()
             .enable(SerializationFeature.INDENT_OUTPUT)
             .writeValueAsString(response);
