@@ -121,7 +121,10 @@ phase, on purpose, so specs survive across sessions and context resets.
 - `specs/002-ui-polish/` — Seven UI fixes: chunk table color coding,
   resizable columns, remove `#` column, non-wrapping title, panel
   borders, shared resizable split layout, sticky toolbar.
-  Status: Approved.
+  Status: Approved, implemented. 15 decisions recorded.
 - `specs/003-use-docling-serve-api/` — Switch DoclingExtractor and
   CaptureDoclingResponsesTest from DoclingService wrapper to direct
   DoclingServeApi usage. Status: Approved, implemented.
+- `specs/004-chunk-metadata-enrichment/` — Fix Mode B elementLabel bug,
+  enrich Mode C with elementType via includeConvertedDoc + docItems
+  cross-referencing. Status: Approved.
