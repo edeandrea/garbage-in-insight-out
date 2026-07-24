@@ -88,10 +88,10 @@ class ChatPanel {
         var grid = new Grid<>(ChunkRow.class, false);
 
         grid.addColumn(row -> "%.2f".formatted(row.chunk().metadata().relevanceScore()))
-            .setHeader(headerWithTooltip("Score")).setFlexGrow(0).setWidth("70px").setResizable(true);
+            .setHeader(headerWithTooltip("Score")).setFlexGrow(0).setWidth("90px").setResizable(true);
         grid.addColumn(row -> (row.chunk().metadata().pageNumber() != null)
                 ? row.chunk().metadata().pageNumber().toString() : "—")
-            .setHeader(headerWithTooltip("Page")).setFlexGrow(0).setWidth("60px").setResizable(true);
+            .setHeader(headerWithTooltip("Page")).setFlexGrow(0).setWidth("80px").setResizable(true);
         grid.addColumn(row -> (row.chunk().metadata().elementType() != null)
                 ? row.chunk().metadata().elementType() : "—")
             .setHeader(headerWithTooltip("Type")).setFlexGrow(0).setWidth("100px").setResizable(true);
@@ -105,11 +105,16 @@ class ChatPanel {
                 var text = row.chunk().text();
                 return (text.length() > 80) ? "%s...".formatted(text.substring(0, 80)) : text;
             })
-            .setHeader(headerWithTooltip("Preview")).setFlexGrow(1).setResizable(true);
+            .setHeader(headerWithTooltip("Preview")).setFlexGrow(1).setAutoWidth(true).setResizable(true);
 
         grid.setItemDetailsRenderer(new ComponentRenderer<>(row -> {
             var pre = new Pre(row.chunk().text());
             pre.addClassNames(Whitespace.PRE_WRAP);
+            pre.getStyle()
+                .set("overflow-x", "auto")
+                .set("word-break", "break-word")
+                .set("max-width", "100%")
+                .set("margin", "0");
             return pre;
         }));
 
