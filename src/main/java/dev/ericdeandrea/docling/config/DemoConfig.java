@@ -20,5 +20,12 @@ public interface DemoConfig {
 
         @WithDefault("fixtures/doclaynet-2206.01062v1.pdf")
         String fixturePath();
+
+        IngestionConfig ingestion();
+
+        interface IngestionConfig {
+            @WithDefault("true")
+            boolean parallel();
+        }
     }
 }

@@ -42,5 +42,6 @@ jobs:
             -Dquarkus.langchain4j.ollama.base-url=http://localhost:11434 \
             -Dquarkus.langchain4j.ollama.chat-model.model-id=qwen3:1.7b \
             -Dquarkus.langchain4j.ollama.timeout=120s \
+            -Ddemo.rag.ingestion.parallel=false \
             -Duse.wiremock.docling=true \
             -Drun.planted-questions=true

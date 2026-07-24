@@ -53,25 +53,36 @@ class IngestionStartup {
 
             Log.infof("Starting ingestion for document: %s", documentPath);
 
-            var unis = this.pipelines.stream()
-                .map(pipeline -> Uni.createFrom().voidItem()
-                    .invoke(() -> runPipeline(pipeline, documentPath, client, existingCollections))
-                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool()))
-                .toList();
-
-            Uni.join()
-                .all(unis)
-                .andCollectFailures()
-                .onFailure()
-                .invoke(t -> Log.error("Ingestion failed for one or more modes", t))
-                .await()
-                .atMost(Duration.ofMinutes(10));
+            if (this.demoConfig.rag().ingestion().parallel()) {
+                Log.info("Running ingestion in parallel");
+                ingestParallel(documentPath, client, existingCollections);
+            }
+            else {
+                Log.info("Running ingestion sequentially");
+                this.pipelines.forEach(pipeline -> runPipeline(pipeline, documentPath, client, existingCollections));
+            }
 
             Log.info("Ingestion complete");
         }
         catch (ExecutionException | InterruptedException e) {
             throw new IngestionException("Ingestion failed", e);
         }
+    }
+
+    private void ingestParallel(Path documentPath, QdrantClient client, List<String> existingCollections) {
+        var unis = this.pipelines.stream()
+            .map(pipeline -> Uni.createFrom().voidItem()
+                .invoke(() -> runPipeline(pipeline, documentPath, client, existingCollections))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool()))
+            .toList();
+
+        Uni.join()
+            .all(unis)
+            .andCollectFailures()
+            .onFailure()
+            .invoke(t -> Log.error("Ingestion failed for one or more modes", t))
+            .await()
+            .atMost(Duration.ofMinutes(10));
     }
 
     private void runPipeline(IngestionPipeline pipeline, Path documentPath,

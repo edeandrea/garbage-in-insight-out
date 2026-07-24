@@ -114,5 +114,10 @@ class NaiveChunkerTest {
         public String fixturePath() {
             return "fixtures/doclaynet-2206.01062v1.pdf";
         }
+
+        @Override
+        public IngestionConfig ingestion() {
+            return () -> true;
+        }
     }
 }

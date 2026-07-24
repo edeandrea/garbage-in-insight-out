@@ -1294,3 +1294,30 @@ events (TokenEvent, ChunksRetrievedEvent, CompletedEvent), then assert
 on component state via browserless test API. Tests go in a new
 `ChatPanelTest` class. This avoids browser/WebSocket complexity while
 still exercising the real UI component logic.
+
+## 81. [2026-07-23 18:03 EDT]: Add DoclingWiremockTestProfile to all CI-run @QuarkusTest classes
+
+**Question:** CI fails because @QuarkusTest classes without
+@TestProfile(DoclingWiremockTestProfile.class) share a default Quarkus
+instance that boots with real Docling Serve, which times out at 60s.
+
+**Decision:** Add the profile to every @QuarkusTest that runs in CI:
+ChatServiceTest, ChatPanelTest, ChatViewTest, CurrentModeTest,
+IngestionStartupTest, ModeAwareRetrievalAugmentorTest, TikaExtractorTest,
+and PlantedQuestionsValidationTest. The profile is conditional — it only
+redirects to WireMock when -Duse.wiremock.docling=true is set, so it's
+always safe. Tests that intentionally need real Docling
+(CaptureDoclingResponsesTest, ChunkSizeSimulationTest, ModeAvsModeBTest)
+are excluded — they're gated and not run in CI.
+
+## 82. [2026-07-23 22:16 EDT]: Add configurable parallel ingestion flag
+
+**Question:** CI fails because parallel ingestion hits Docling and Ollama
+simultaneously on a resource-constrained GitHub runner, causing timeouts.
+Should we add a config flag to control parallel vs sequential ingestion?
+
+**Decision:** Add `demo.rag.parallel-ingestion` config flag (default true).
+When true, pipelines run in parallel with Mutiny as before. When false,
+pipelines run sequentially. CI sets the flag to false to avoid overloading
+the runner. Revert the @TestProfile additions from the UI tests — the
+real fix is controlling resource pressure, not routing around it.
