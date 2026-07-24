@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
+import io.smallrye.mutiny.Uni;
 
 import dev.ericdeandrea.docling.ai.ingestion.chunking.NaiveChunker;
 import dev.ericdeandrea.docling.ai.ingestion.extraction.TikaExtractor;
@@ -40,13 +41,15 @@ class TikaNaiveIngestionPipeline extends AbstractIngestionPipeline {
     }
 
     @Override
-    List<TextSegment> buildSegments(Path documentPath) {
-        // Tika extracts raw text — no structural awareness of tables, headings, or layout.
-        // This is the "garbage in" step: table rows get concatenated, columns merge, and
-        // unrelated text from adjacent page regions gets spliced together.
-        var result = this.tikaExtractor.extract(documentPath);
+    Uni<List<TextSegment>> buildSegments(Path documentPath) {
+        return Uni.createFrom().item(() -> {
+            // Tika extracts raw text — no structural awareness of tables, headings, or layout.
+            // This is the "garbage in" step: table rows get concatenated, columns merge, and
+            // unrelated text from adjacent page regions gets spliced together.
+            var result = this.tikaExtractor.extract(documentPath);
 
-        // Same sentence-splitter chunker as Mode B — the only variable is extraction quality.
-        return this.naiveChunker.chunk(result, Mode.NAIVE);
+            // Same sentence-splitter chunker as Mode B — the only variable is extraction quality.
+            return this.naiveChunker.chunk(result, Mode.NAIVE);
+        });
     }
 }

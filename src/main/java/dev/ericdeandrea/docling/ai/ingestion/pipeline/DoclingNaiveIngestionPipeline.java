@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
+import io.smallrye.mutiny.Uni;
 
 import dev.ericdeandrea.docling.ai.ingestion.chunking.NaiveChunker;
 import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingExtractor;
@@ -40,14 +41,13 @@ class DoclingNaiveIngestionPipeline extends AbstractIngestionPipeline {
     }
 
     @Override
-    List<TextSegment> buildSegments(Path documentPath) {
+    Uni<List<TextSegment>> buildSegments(Path documentPath) {
         // Docling produces clean, structured text — tables are properly formatted, headings
         // are separated from body text, and provenance (page number, element type) is preserved.
-        var result = this.doclingExtractor.extract(documentPath);
-
-        // Same sentence-splitter chunker as Mode A. Better extraction = better answers, but
-        // the naive chunker still splits table headers from data values into separate chunks.
-        // This limitation is what Mode C fixes.
-        return this.naiveChunker.chunk(result, Mode.DOCLING_NAIVE_CHUNK);
+        return this.doclingExtractor.extract(documentPath)
+            // Same sentence-splitter chunker as Mode A. Better extraction = better answers, but
+            // the naive chunker still splits table headers from data values into separate chunks.
+            // This limitation is what Mode C fixes.
+            .map(result -> this.naiveChunker.chunk(result, Mode.DOCLING_NAIVE_CHUNK));
     }
 }

@@ -3,6 +3,8 @@ package dev.ericdeandrea.docling.ai.ingestion.pipeline;
 import java.nio.file.Path;
 import java.util.List;
 
+import io.smallrye.mutiny.Uni;
+
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.segment.TextSegment;
 
@@ -35,7 +37,7 @@ public interface IngestionPipeline {
      * Extracts, chunks, embeds, and stores the document at the given path.
      *
      * @param documentPath path to the source document (e.g. a PDF fixture)
-     * @return the text segments that were embedded and stored
+     * @return a {@link Uni} emitting the text segments that were embedded and stored
      */
-    List<TextSegment> processAndStore(Path documentPath);
+    Uni<List<TextSegment>> processAndStore(Path documentPath);
 }

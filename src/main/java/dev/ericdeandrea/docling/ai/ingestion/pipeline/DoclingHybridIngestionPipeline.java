@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
+import io.smallrye.mutiny.Uni;
 
 import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingExtractor;
 import dev.ericdeandrea.docling.model.Mode;
@@ -37,7 +38,7 @@ class DoclingHybridIngestionPipeline extends AbstractIngestionPipeline {
     }
 
     @Override
-    List<TextSegment> buildSegments(Path documentPath) {
+    Uni<List<TextSegment>> buildSegments(Path documentPath) {
         // Docling's hybrid chunker runs server-side and is structure-aware: it keeps table
         // rows together as self-describing triplets (e.g. "All, FRCNN.R101 = 73.4") instead
         // of splitting column headers from data values. This is the "insight out" step —

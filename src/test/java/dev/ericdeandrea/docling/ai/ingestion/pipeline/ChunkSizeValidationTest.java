@@ -3,6 +3,7 @@ package dev.ericdeandrea.docling.ai.ingestion.pipeline;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 import jakarta.inject.Inject;
 
@@ -52,7 +53,9 @@ class ChunkSizeValidationTest {
 
     @Test
     void modeBTable2ValuesLackColumnHeaders() {
-        var result = doclingExtractor.extract(FIXTURE);
+        var result = doclingExtractor.extract(FIXTURE)
+            .await()
+            .atMost(Duration.ofMinutes(5));
         var segments = naiveChunker.chunk(result, Mode.DOCLING_NAIVE_CHUNK);
 
         var chunkWithValues = segments.stream()
@@ -71,7 +74,9 @@ class ChunkSizeValidationTest {
 
     @Test
     void modeCTable2HasSelfDescribingValues() {
-        var segments = doclingExtractor.extractAndChunk(FIXTURE);
+        var segments = doclingExtractor.extractAndChunk(FIXTURE)
+            .await()
+            .atMost(Duration.ofMinutes(5));
 
         var chunkWithValues = segments.stream()
             .filter(s -> s.text().contains("76.8") && s.text().contains("73.4"))

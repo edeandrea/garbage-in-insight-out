@@ -3,6 +3,8 @@ package dev.ericdeandrea.docling.ai.ingestion.pipeline;
 import java.nio.file.Path;
 import java.util.List;
 
+import io.smallrye.mutiny.Uni;
+
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -35,21 +37,18 @@ abstract class AbstractIngestionPipeline implements IngestionPipeline {
      * Mode A uses Tika + sentence splitter, Mode B uses Docling + sentence splitter,
      * Mode C uses Docling's server-side hybrid chunker.
      */
-    abstract List<TextSegment> buildSegments(Path documentPath);
+    abstract Uni<List<TextSegment>> buildSegments(Path documentPath);
 
     @Override
-    public final List<TextSegment> processAndStore(Path documentPath) {
-        var segments = buildSegments(documentPath);
-
-        // Embed and store into the mode's Qdrant collection — identical for all modes.
-        EmbeddingStoreIngestor.builder()
-            .embeddingStore(this.store)
-            .embeddingModel(this.embeddingModel)
-            .build()
-            .ingest(segments.stream()
-                .map(s -> Document.from(s.text(), s.metadata()))
-                .toList());
-
-        return segments;
+    public final Uni<List<TextSegment>> processAndStore(Path documentPath) {
+        return buildSegments(documentPath)
+            .invoke(segments ->
+                EmbeddingStoreIngestor.builder()
+                    .embeddingStore(this.store)
+                    .embeddingModel(this.embeddingModel)
+                    .build()
+                    .ingest(segments.stream()
+                        .map(s -> Document.from(s.text(), s.metadata()))
+                        .toList()));
     }
 }

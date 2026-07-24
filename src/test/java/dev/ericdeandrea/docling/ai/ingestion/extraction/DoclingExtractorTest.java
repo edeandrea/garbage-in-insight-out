@@ -3,6 +3,7 @@ package dev.ericdeandrea.docling.ai.ingestion.extraction;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 import jakarta.inject.Inject;
 
@@ -22,7 +23,9 @@ class DoclingExtractorTest {
 
     @Test
     void extractsFixturePdfWithProvenance() {
-        var result = doclingExtractor.extract(Path.of("fixtures/doclaynet-2206.01062v1.pdf"));
+        var result = doclingExtractor.extract(Path.of("fixtures/doclaynet-2206.01062v1.pdf"))
+            .await()
+            .atMost(Duration.ofMinutes(5));
 
         assertThat(result)
             .isNotNull()

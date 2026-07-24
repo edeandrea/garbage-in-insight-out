@@ -48,12 +48,15 @@ class CaptureDoclingResponsesTest {
     ObjectMapper objectMapper;
 
     @Test
-    void captureConversionResponse() throws IOException {
+    void captureConversionResponse() throws Exception {
         var request = ConvertDocumentRequest.builder()
             .options(JSON_OPTIONS)
             .build();
 
-        var response = doclingServeApi.convertFiles(request, FIXTURE);
+        var response = doclingServeApi.convertFilesAsync(request, FIXTURE)
+            .toCompletableFuture()
+            .join();
+
         var json = objectMapper.copy()
             .enable(SerializationFeature.INDENT_OUTPUT)
             .writeValueAsString(response);
@@ -62,12 +65,15 @@ class CaptureDoclingResponsesTest {
     }
 
     @Test
-    void captureChunkingResponse() throws IOException {
+    void captureChunkingResponse() throws Exception {
         var request = HybridChunkDocumentRequest.builder()
             .options(JSON_OPTIONS)
             .build();
 
-        var response = doclingServeApi.chunkFilesWithHybridChunker(request, FIXTURE);
+        var response = doclingServeApi.chunkFilesWithHybridChunkerAsync(request, FIXTURE)
+            .toCompletableFuture()
+            .join();
+
         var json = objectMapper.copy()
             .enable(SerializationFeature.INDENT_OUTPUT)
             .writeValueAsString(response);

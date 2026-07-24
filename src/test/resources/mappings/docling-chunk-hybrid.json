@@ -1,13 +1,13 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/v1/chunk/hybrid/source"
+    "urlPathPattern": "/v1/chunk/hybrid/source/async"
   },
   "response": {
     "status": 200,
     "headers": {
       "Content-Type": "application/json"
     },
-    "bodyFileName": "docling-chunk-response.json"
+    "bodyFileName": "docling-chunk-task-submit.json"
   }
 }

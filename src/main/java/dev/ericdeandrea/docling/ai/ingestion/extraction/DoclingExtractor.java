@@ -20,6 +20,8 @@ import ai.docling.serve.api.convert.request.options.ConvertDocumentOptions;
 import ai.docling.serve.api.convert.request.options.OutputFormat;
 import ai.docling.serve.api.convert.response.InBodyConvertDocumentResponse;
 
+import io.smallrye.mutiny.Uni;
+
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
@@ -38,17 +40,20 @@ public class DoclingExtractor {
         this.doclingServeApi = doclingServeApi;
     }
 
-    public ExtractionResult extract(Path documentPath) {
+    public Uni<ExtractionResult> extract(Path documentPath) {
         var request = ConvertDocumentRequest.builder()
             .options(JSON_OPTIONS)
             .build();
 
-        var response = (InBodyConvertDocumentResponse) this.doclingServeApi.convertFiles(request, documentPath);
-        var doclingDoc = response.getDocument().getJsonContent();
-        var fullText = buildFullText(doclingDoc);
-        var provenance = buildProvenance(doclingDoc, fullText);
-
-        return new ExtractionResult(Document.from(fullText), provenance);
+        return Uni.createFrom()
+            .completionStage(() -> this.doclingServeApi.convertFilesAsync(request, documentPath))
+            .map(InBodyConvertDocumentResponse.class::cast)
+            .map(response -> response.getDocument().getJsonContent())
+            .map(doclingDoc -> {
+                var fullText = buildFullText(doclingDoc);
+                var provenance = buildProvenance(doclingDoc, fullText);
+                return new ExtractionResult(Document.from(fullText), provenance);
+            });
     }
 
     private String buildFullText(DoclingDocument doc) {
@@ -106,29 +111,29 @@ public class DoclingExtractor {
             });
     }
 
-    public List<TextSegment> extractAndChunk(Path documentPath) {
+    public Uni<List<TextSegment>> extractAndChunk(Path documentPath) {
         var request = HybridChunkDocumentRequest.builder()
             .options(JSON_OPTIONS)
             .build();
 
-        var response = this.doclingServeApi.chunkFilesWithHybridChunker(request, documentPath);
+        return Uni.createFrom()
+            .completionStage(() -> this.doclingServeApi.chunkFilesWithHybridChunkerAsync(request, documentPath))
+            .map(response -> response.getChunks()
+                .stream()
+                .map(chunk -> {
+                    var metadata = new Metadata()
+                        .put("mode", Mode.DOCLING_HYBRID_CHUNK.name());
 
-        return response.getChunks()
-            .stream()
-            .map(chunk -> {
-                var metadata = new Metadata()
-                    .put("mode", Mode.DOCLING_HYBRID_CHUNK.name());
+                    if ((chunk.getPageNumbers() != null) && !chunk.getPageNumbers().isEmpty()) {
+                        metadata.put("page_number", chunk.getPageNumbers().getFirst());
+                    }
 
-                if ((chunk.getPageNumbers() != null) && !chunk.getPageNumbers().isEmpty()) {
-                    metadata.put("page_number", chunk.getPageNumbers().getFirst());
-                }
+                    if ((chunk.getCaptions() != null) && !chunk.getCaptions().isEmpty()) {
+                        metadata.put("element_label", chunk.getCaptions().getFirst());
+                    }
 
-                if ((chunk.getCaptions() != null) && !chunk.getCaptions().isEmpty()) {
-                    metadata.put("element_label", chunk.getCaptions().getFirst());
-                }
-
-                return TextSegment.from(chunk.getText(), metadata);
-            })
-            .toList();
+                    return TextSegment.from(chunk.getText(), metadata);
+                })
+                .toList());
     }
 }

@@ -1,6 +1,7 @@
 package dev.ericdeandrea.docling.ai.ingestion.pipeline;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 import jakarta.inject.Inject;
 
@@ -61,7 +62,9 @@ class ModeAvsModeBTest {
         }
 
         System.out.println("\n\n=== MODE B (Docling + same chunker) — chunks containing Table 2 markers ===\n");
-        var doclingResult = doclingExtractor.extract(FIXTURE);
+        var doclingResult = doclingExtractor.extract(FIXTURE)
+            .await()
+            .atMost(Duration.ofMinutes(5));
         var modeBSegments = naiveChunker.chunk(doclingResult, Mode.DOCLING_NAIVE_CHUNK);
 
         System.out.println("Total Mode B segments: " + modeBSegments.size());

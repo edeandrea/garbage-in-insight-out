@@ -1,6 +1,7 @@
 package dev.ericdeandrea.docling.ai.ingestion.pipeline;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -39,7 +40,9 @@ class ChunkSizeSimulationTest {
 
     @Test
     void findTable2Content() {
-        var result = doclingExtractor.extract(FIXTURE);
+        var result = doclingExtractor.extract(FIXTURE)
+            .await()
+            .atMost(Duration.ofMinutes(5));
         var fullText = result.document().text();
 
         System.out.println("\n=== Searching for Table 2 markers in full text ===\n");
@@ -69,7 +72,9 @@ class ChunkSizeSimulationTest {
 
     @Test
     void simulateChunkSizes() {
-        var result = doclingExtractor.extract(FIXTURE);
+        var result = doclingExtractor.extract(FIXTURE)
+            .await()
+            .atMost(Duration.ofMinutes(5));
 
         for (var maxTokens : List.of(100, 150, 200, 250, 300)) {
             simulateAtSize(result, maxTokens);

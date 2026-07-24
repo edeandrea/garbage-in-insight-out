@@ -19,7 +19,6 @@ import io.qdrant.client.grpc.Collections.Distance;
 import io.qdrant.client.grpc.Collections.VectorParams;
 import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStoreConfig;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 import dev.ericdeandrea.docling.ai.ingestion.pipeline.IngestionPipeline;
 import dev.ericdeandrea.docling.config.DemoConfig;
@@ -59,7 +58,7 @@ class IngestionStartup {
             }
             else {
                 Log.info("Running ingestion sequentially");
-                this.pipelines.forEach(pipeline -> runPipeline(pipeline, documentPath, client, existingCollections));
+                ingestSequential(documentPath, client, existingCollections);
             }
 
             Log.info("Ingestion complete");
@@ -71,9 +70,7 @@ class IngestionStartup {
 
     private void ingestParallel(Path documentPath, QdrantClient client, List<String> existingCollections) {
         var unis = this.pipelines.stream()
-            .map(pipeline -> Uni.createFrom().voidItem()
-                .invoke(() -> runPipeline(pipeline, documentPath, client, existingCollections))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool()))
+            .map(pipeline -> runPipeline(pipeline, documentPath, client, existingCollections))
             .toList();
 
         Uni.join()
@@ -85,20 +82,30 @@ class IngestionStartup {
             .atMost(Duration.ofMinutes(10));
     }
 
-    private void runPipeline(IngestionPipeline pipeline, Path documentPath,
-                             QdrantClient client, List<String> existingCollections) {
+    private void ingestSequential(Path documentPath, QdrantClient client, List<String> existingCollections) {
+        this.pipelines.forEach(pipeline ->
+            runPipeline(pipeline, documentPath, client, existingCollections)
+                .await()
+                .atMost(Duration.ofMinutes(10)));
+    }
+
+    private Uni<Void> runPipeline(IngestionPipeline pipeline, Path documentPath,
+                                   QdrantClient client, List<String> existingCollections) {
         var collectionName = resolveCollectionName(pipeline);
 
         if (existingCollections.contains(collectionName)) {
             Log.infof("%s collection '%s' already exists, skipping ingestion",
                 pipeline.mode().displayLabel(), collectionName);
+            return Uni.createFrom().voidItem();
         }
-        else {
-            Log.infof("Ingesting %s...", pipeline.mode().displayLabel());
-            createCollection(client, collectionName);
-            var segments = pipeline.processAndStore(documentPath);
-            Log.infof("%s ingested %d segments", pipeline.mode().displayLabel(), segments.size());
-        }
+
+        Log.infof("Ingesting %s...", pipeline.mode().displayLabel());
+        createCollection(client, collectionName);
+
+        return pipeline.processAndStore(documentPath)
+            .invoke(segments -> Log.infof("%s ingested %d segments",
+                pipeline.mode().displayLabel(), segments.size()))
+            .replaceWithVoid();
     }
 
     private String resolveCollectionName(IngestionPipeline pipeline) {

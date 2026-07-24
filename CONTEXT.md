@@ -128,3 +128,7 @@ phase, on purpose, so specs survive across sessions and context resets.
 - `specs/004-chunk-metadata-enrichment/` — Fix Mode B elementLabel bug,
   enrich Mode C with elementType via includeConvertedDoc + docItems
   cross-referencing. Status: Approved.
+- `specs/005-async-docling-api/` — Switch DoclingExtractor to async
+  Docling Serve API (convertFilesAsync, chunkFilesWithHybridChunkerAsync),
+  make pipeline fully reactive with Uni return types.
+  Status: Approved, implemented.

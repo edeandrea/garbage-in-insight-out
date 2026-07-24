@@ -1,13 +1,13 @@
 {
   "request": {
-    "method": "POST",
-    "urlPathPattern": "/v1/convert/source/async"
+    "method": "GET",
+    "urlPath": "/v1/result/chunk-task-1"
   },
   "response": {
     "status": 200,
     "headers": {
       "Content-Type": "application/json"
     },
-    "bodyFileName": "docling-convert-task-submit.json"
+    "bodyFileName": "docling-chunk-response.json"
   }
 }

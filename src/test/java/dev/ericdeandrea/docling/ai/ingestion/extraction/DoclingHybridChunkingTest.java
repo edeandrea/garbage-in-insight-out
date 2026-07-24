@@ -3,6 +3,7 @@ package dev.ericdeandrea.docling.ai.ingestion.extraction;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 import jakarta.inject.Inject;
 
@@ -23,7 +24,9 @@ class DoclingHybridChunkingTest {
 
     @Test
     void chunksFixturePdfWithPageMetadata() {
-        var segments = doclingExtractor.extractAndChunk(Path.of("fixtures/doclaynet-2206.01062v1.pdf"));
+        var segments = doclingExtractor.extractAndChunk(Path.of("fixtures/doclaynet-2206.01062v1.pdf"))
+            .await()
+            .atMost(Duration.ofMinutes(5));
 
         assertThat(segments)
             .isNotEmpty()
