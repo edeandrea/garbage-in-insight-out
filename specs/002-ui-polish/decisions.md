@@ -203,3 +203,20 @@ use its own internal scrollbar)?
 
 **Decision:** Remove it. The grid uses its own internal scrollbar within
 the constrained bottom half of the SplitLayout.
+
+---
+
+## 13. [2026-07-24 13:17 EDT]: Chunks header label test location
+
+**Question:** The "Retrieved Chunks (N)" header label test was listed
+under `ChatViewTest` (task 10), but the plan placed it in
+`ChatPanelTest` as `chunksHeaderShowsCount`. Which test class should own
+this test?
+
+**Options considered:**
+1. `ChatPanelTest` — already mocks `AssistantService` and fires submits,
+   making it the natural home alongside other ChatPanel behavior tests.
+2. `ChatViewTest` — test it as part of the SplitLayout integration tests.
+
+**Decision:** `ChatPanelTest`. The header label is ChatPanel behavior,
+not layout structure.
