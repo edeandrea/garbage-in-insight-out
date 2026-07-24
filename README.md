@@ -116,19 +116,47 @@ The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeand
 
 ## Planted Questions
 
-### Set 1 (Mode A vs B)
+### Table data questions (tests structured extraction)
 
 > "What does Table 2 show, and what network architecture won overall?"
 
-- **Mode A:** Retrieved chunks are garbled — values run together, unrelated text spliced in, no page metadata.
-- **Mode B:** Retrieved chunks are clean with page metadata — but column headers separated from values.
-
-### Set 2 (Mode B vs C)
+Requires the table caption + surrounding discussion text. Extended
+content helps Modes A/B reach a qualitative answer; Mode C gives
+precise scores.
 
 > "By how many mAP points does YOLOv5x outperform Faster R-CNN overall?"
 
-- **Mode B:** Column headers in a different chunk from the data values. LLM doesn't know which value is FRCNN vs YOLO.
-- **Mode C:** Self-describing triplets (`All, FRCNN.R101 = 73.4. All, YOLO.v5x6 = 76.8`). LLM can answer from the chunk alone.
+Requires reading actual table grid data (specific mAP values per
+model). Only Mode C keeps table data intact via hybrid chunking.
+
+> "What is the most frequent class label in DocLayNet, and how many instances does it have?"
+
+Answer: Text, 510,377 (Table 1 data). Requires scanning the Count
+column.
+
+> "Which class label has the highest inter-annotator agreement across all document categories?"
+
+Answer: Page-footer at 93-94% (Table 1, "All" column). Requires
+comparing values across rows.
+
+### Figure data questions (tests chart/image text extraction)
+
+> "What percentage of DocLayNet pages are Patents?"
+
+Answer: 21% (Figure 2 pie chart). The percentage appears only as a
+text label on the chart — not in the body prose. Tests whether
+extraction captures chart text.
+
+> "According to Figure 2, which document category is the largest in DocLayNet?"
+
+Answer: Financial Reports at 32%. Same chart, different angle.
+
+### Prose questions (control — all modes should answer similarly)
+
+> "How many annotators were used in the production annotation phase, and how long did it take?"
+
+Answer: 32 annotators, about three months (Section 4, page 5). This
+is plain prose text — verifies the baseline works across all modes.
 
 ## Fixtures
 
