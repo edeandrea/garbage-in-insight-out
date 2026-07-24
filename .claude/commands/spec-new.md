@@ -12,5 +12,9 @@ source code in this command.
    (Draft), Summary, Motivation, Requirements (numbered, testable
    statements), Out of scope, Open questions.
 3. Show the user the file and STOP. Do not proceed to planning or
-   implementation. Tell them to review it and either ask for changes, or
+   implementation.
+4. Go through it yourself one more time looking for any outstanding
+   questions, ambiguities, or missing requirements. If you find any, 
+   ask the user for clarification 1 item at a time, and record those clarifications.
+5. Ask them to review it and either ask for changes, or
    run `/spec-plan <slug>` once they've set Status to Approved.

@@ -18,5 +18,8 @@ Given a spec slug:
 3. If a task turns out to need a design decision not covered by plan.md,
    stop and ask rather than improvising. Record the decision in
    `specs/<slug>/decisions.md` and suggest updating plan.md if needed.
-4. When all tasks are checked, summarize what was built and note anything
+4. Go through everything yourself one more time looking for any outstanding
+   questions, ambiguities, or missing requirements. If you find any, 
+   ask the user for clarification 1 item at a time, and record those clarifications.
+5. When all tasks are checked, summarize what was built and note anything
    that deviated from the plan.
