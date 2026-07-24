@@ -118,3 +118,7 @@ phase, on purpose, so specs survive across sessions and context resets.
   `decisions.md`. Pending: true black-box IT via Playwright/WebSocket,
   PR [#2691](https://github.com/quarkiverse/quarkus-langchain4j/pull/2691)
   for Qdrant Dev Services create-collections simplification.
+- `specs/002-ui-polish/` — Seven UI fixes: chunk table color coding,
+  resizable columns, remove `#` column, non-wrapping title, panel
+  borders, shared resizable split layout, sticky toolbar.
+  Status: Approved.
