@@ -52,3 +52,5 @@ easy-rag-embeddings.json
 .quinoa/
 /testing/ai-tester/ai-interactions.db
 /.mcp.json
+/.bob/.bob-errors/
+/.bob/notes/
