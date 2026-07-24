@@ -3,7 +3,11 @@ quarkus:
     category:
       "org.apache.pdfbox":
         level: ERROR
+      "org.atmosphere":
+        level: WARN
       "io.quarkiverse.wiremock":
+        level: WARN
+      "com.vaading.flow.server.frontend":
         level: WARN
   langchain4j:
     chat-model:
