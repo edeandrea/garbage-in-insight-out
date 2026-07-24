@@ -148,3 +148,15 @@ current Docling Serve version, should we fall back to a separate
 
 **Decision:** No. If it doesn't work, fail the validation step (req 3)
 and reassess. Don't add complexity for a hypothetical failure.
+
+---
+
+## 10. [2026-07-24 16:17 EDT]: WireMock stub capture approach
+
+**Question:** Task 1 requires running `CaptureDoclingResponsesTest` with
+a live Docling Serve. Should the user run it manually, or attempt it
+during implementation via dev services?
+
+**Decision:** Attempt during implementation. Dev services should start a
+Docling Serve container automatically. If it fails, fall back to manual
+capture.
