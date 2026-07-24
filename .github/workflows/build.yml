@@ -3,8 +3,12 @@ name: Build
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - specs/**
   pull_request:
     branches: [main]
+    paths-ignore:
+      - specs/**
 
 concurrency:
   group: "workflow = ${{ github.workflow }}, ref = ${{ github.event.ref }}, pr = ${{ github.event.pull_request.id }}"
