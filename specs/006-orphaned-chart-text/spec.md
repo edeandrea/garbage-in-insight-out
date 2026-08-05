@@ -1,6 +1,6 @@
 # Spec 006: Orphaned Chart Text in Hybrid Chunks
 
-**Status:** Draft
+**Status:** Approved
 
 ## Summary
 
