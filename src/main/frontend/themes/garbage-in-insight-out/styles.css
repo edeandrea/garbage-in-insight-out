@@ -34,6 +34,15 @@ vaadin-grid::part(round-color-6) {
 
 vaadin-message.current-user {
     flex-direction: row-reverse;
+    border-top: 1px solid var(--lumo-contrast-20pct);
+    margin-top: var(--lumo-space-s);
+    padding-top: var(--lumo-space-s);
+}
+
+vaadin-message.current-user:first-child {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
 }
 
 vaadin-message.current-user::part(content) {
@@ -42,6 +51,10 @@ vaadin-message.current-user::part(content) {
 
 vaadin-message.current-user::part(header) {
     flex-direction: row-reverse;
+}
+
+vaadin-message::part(name) {
+    font-weight: bold;
 }
 
 .sticky-toolbar {

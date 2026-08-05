@@ -204,5 +204,8 @@ class ChatPanel {
         }
 
         this.messageList.setItems(List.copyOf(this.items));
+        this.messageList.getElement().executeJs(
+            "setTimeout(() => this.querySelector('.highlighted')?.scrollIntoView({behavior: 'smooth', block: 'center'}), 100)"
+        );
     }
 }
