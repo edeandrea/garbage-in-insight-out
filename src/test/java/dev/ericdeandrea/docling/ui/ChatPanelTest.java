@@ -76,6 +76,25 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
     }
 
     @Test
+    void userMessageHasCurrentUserClass() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "test question");
+
+        var items = find(MessageList.class, panel.messageArea()).single().getItems();
+
+        var userItem = items.stream()
+            .filter(item -> "You".equals(item.getUserName()))
+            .findFirst()
+            .orElseThrow();
+
+        assertThat(userItem.hasClassName("current-user"))
+            .as("User message should have current-user class")
+            .isTrue();
+    }
+
+    @Test
     void chunksGridPopulatedAfterResponse() {
         var view = navigate(ChatView.class);
         var panel = view.panels().get(Mode.NAIVE);

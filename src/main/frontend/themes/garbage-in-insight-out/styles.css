@@ -32,6 +32,18 @@ vaadin-grid::part(round-color-6) {
     background-color: color-mix(in srgb, var(--vaadin-user-color-6) 15%, transparent);
 }
 
+vaadin-message.current-user {
+    flex-direction: row-reverse;
+}
+
+vaadin-message.current-user::part(content) {
+    align-items: flex-end;
+}
+
+vaadin-message.current-user::part(header) {
+    flex-direction: row-reverse;
+}
+
 .sticky-toolbar {
     background-color: var(--lumo-base-color);
 }

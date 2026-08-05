@@ -145,6 +145,7 @@ class ChatPanel {
 
         var userItem = new MessageListItem(userMessage);
         userItem.setUserName("You");
+        userItem.addClassNames("current-user");
         this.items.add(userItem);
 
         this.currentAssistantItem = new MessageListItem("");

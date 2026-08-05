@@ -116,7 +116,30 @@ The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeand
 
 ## Planted Questions
 
-### Table data questions (tests structured extraction)
+Ordered least → most dramatic for the demo narrative.
+
+### 1. Prose baseline (all modes equal)
+
+> "How many annotators were used in the production annotation phase, and how long did it take?"
+
+All three modes answer correctly: 32 annotators, approximately three
+months. Plain prose text — proves all modes handle unstructured text
+equally well. *"See? They all work."*
+
+![Prose results](docs/images/q3-prose-annotators-results.png)
+
+### 2. Figure/chart data (all modes answer)
+
+> "What percentage of DocLayNet pages are Patents?"
+
+All three modes answer correctly (8%). Mode C retrieves a synthetic
+picture segment containing the Figure 2 chart labels
+([spec 006](specs/006-orphaned-chart-text/spec.md)). *"Chart data
+works too — still no difference."*
+
+![Figure results](docs/images/q4-patents-percentage-results.png)
+
+### 3. Table qualitative (differentiation appears)
 
 > "What does Table 2 show, and what network architecture won overall?"
 
@@ -128,44 +151,26 @@ The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeand
   for all models (YOLOv5x6: 77.7, R101: 71.5, FRCNN: 70.1, R50: 68.4).
   Clear quantitative evidence with rich metadata.
 
-![Q1 results](docs/images/q1-table2-results.png)
+*"Wait — Mode C shows actual numbers while the others just
+hand-wave."*
+
+![Table qualitative results](docs/images/q1-table2-results.png)
+
+### 4. Table quantitative (the knockout)
 
 > "By how many mAP points does YOLOv5x outperform Faster R-CNN overall?"
 
-- **Mode A:** Can't answer — "I don't have enough information." No
-  specific mAP values in the retrieved context.
+- **Mode A:** Can't answer — "I don't have enough information."
 - **Mode B:** Can't answer — "the actual table with numerical values
   is not included in the provided context."
 - **Mode C:** Nails it — "FRCNN.R101: 70.1, YOLOv5x6: 77.7. The
   difference is 77.7 - 70.1 = 7.6 mAP points." Only hybrid chunking
   keeps the table data intact enough for the LLM to compute the answer.
 
-![Q2 results](docs/images/q2-map-difference-results.png)
+*"Only Mode C can answer. Same document, same LLM — the difference
+is entirely in how the document was processed."*
 
-
-### Figure data questions (not recommended for demo)
-
-> "What percentage of DocLayNet pages are Patents?"
-
-Answer: 8%. Modes A and B answer correctly (chart text labels get
-concatenated into naive chunks). Mode C can't answer — the hybrid
-chunker doesn't include scattered chart text labels in its chunks.
-All three modes answer correctly (8%). Mode C retrieves a synthetic
-picture segment containing the Figure 2 chart labels — fixed by
-[spec 006](specs/006-orphaned-chart-text/spec.md) which creates
-synthetic segments from orphaned picture-children text items.
-
-![Q4 results](docs/images/q4-patents-percentage-results.png)
-
-### Prose questions (control — all modes should answer similarly)
-
-> "How many annotators were used in the production annotation phase, and how long did it take?"
-
-All three modes answer correctly: 32 annotators, approximately three
-months. This is plain prose text — proves the baseline works and all
-modes handle unstructured text equally well.
-
-![Q3 results](docs/images/q3-prose-annotators-results.png)
+![Table quantitative results](docs/images/q2-map-difference-results.png)
 
 ## Fixtures
 
