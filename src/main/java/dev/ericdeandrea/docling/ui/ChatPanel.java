@@ -155,6 +155,9 @@ class ChatPanel {
         this.items.add(this.currentAssistantItem);
 
         this.messageList.setItems(List.copyOf(this.items));
+        this.messageList.getElement().executeJs(
+            "setTimeout(() => this.scrollTo({top: this.scrollHeight, behavior: 'smooth'}), 100)"
+        );
 
         var round = this.currentRound;
         this.assistantService.chat(this.mode, this.conversationId, userMessage)
