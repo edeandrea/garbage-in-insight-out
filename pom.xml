@@ -22,7 +22,7 @@
         <surefire-plugin.version>3.5.6</surefire-plugin.version>
         <quarkus-langchain4j.version>1.12.2</quarkus-langchain4j.version>
         <vaadin.version>25.2.5</vaadin.version>
-        <quarkus-docling.version>1.4.1</quarkus-docling.version>
+        <quarkus-docling.version>1.4.2</quarkus-docling.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <browserless-test.version>1.1.1</browserless-test.version>
         <quarkus-wiremock.version>1.6.3</quarkus-wiremock.version>
