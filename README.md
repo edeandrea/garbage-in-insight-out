@@ -120,43 +120,52 @@ The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeand
 
 > "What does Table 2 show, and what network architecture won overall?"
 
-Requires the table caption + surrounding discussion text. Extended
-content helps Modes A/B reach a qualitative answer; Mode C gives
-precise scores.
+- **Mode A:** Correct qualitative answer — "YOLOv5x won overall" —
+  but based solely on prose text, no specific scores, no metadata.
+- **Mode B:** Correct qualitative answer — "YOLOv5x6 won overall in
+  Table 2" — with page/type/label metadata in chunks.
+- **Mode C:** Correct with specific scores — lists Caption class mAP
+  for all models (YOLOv5x6: 77.7, R101: 71.5, FRCNN: 70.1, R50: 68.4).
+  Clear quantitative evidence with rich metadata.
+
+![Q1 results](docs/images/q1-table2-results.png)
 
 > "By how many mAP points does YOLOv5x outperform Faster R-CNN overall?"
 
-Requires reading actual table grid data (specific mAP values per
-model). Only Mode C keeps table data intact via hybrid chunking.
+- **Mode A:** Can't answer — "I don't have enough information." No
+  specific mAP values in the retrieved context.
+- **Mode B:** Can't answer — "the actual table with numerical values
+  is not included in the provided context."
+- **Mode C:** Nails it — "FRCNN.R101: 70.1, YOLOv5x6: 77.7. The
+  difference is 77.7 - 70.1 = 7.6 mAP points." Only hybrid chunking
+  keeps the table data intact enough for the LLM to compute the answer.
 
-> "What is the most frequent class label in DocLayNet, and how many instances does it have?"
+![Q2 results](docs/images/q2-map-difference-results.png)
 
-Answer: Text, 510,377 (Table 1 data). Requires scanning the Count
-column.
 
-> "Which class label has the highest inter-annotator agreement across all document categories?"
-
-Answer: Page-footer at 93-94% (Table 1, "All" column). Requires
-comparing values across rows.
-
-### Figure data questions (tests chart/image text extraction)
+### Figure data questions (not recommended for demo)
 
 > "What percentage of DocLayNet pages are Patents?"
 
-Answer: 21% (Figure 2 pie chart). The percentage appears only as a
-text label on the chart — not in the body prose. Tests whether
-extraction captures chart text.
-
-> "According to Figure 2, which document category is the largest in DocLayNet?"
-
-Answer: Financial Reports at 32%. Same chart, different angle.
+Answer: 8%. Modes A and B answer correctly (chart text labels get
+concatenated into naive chunks). Mode C can't answer — the hybrid
+chunker doesn't include scattered chart text labels in its chunks.
+This shows a real tradeoff: hybrid chunking excels at tables but
+can miss chart/figure text data. The question "According to Figure 2,
+which document category is the largest?" shows the same pattern
+(A/B answer "Financial 32%", C can't). See
+[spec 006](specs/006-orphaned-chart-text/spec.md) for the planned
+fix. Not recommended for the demo until spec 006 is implemented.
 
 ### Prose questions (control — all modes should answer similarly)
 
 > "How many annotators were used in the production annotation phase, and how long did it take?"
 
-Answer: 32 annotators, about three months (Section 4, page 5). This
-is plain prose text — verifies the baseline works across all modes.
+All three modes answer correctly: 32 annotators, approximately three
+months. This is plain prose text — proves the baseline works and all
+modes handle unstructured text equally well.
+
+![Q3 results](docs/images/q3-prose-annotators-results.png)
 
 ## Fixtures
 
