@@ -2,8 +2,8 @@ package dev.ericdeandrea.docling.ai.ingestion.extraction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -81,7 +81,7 @@ class DocItemIndexTest {
             Map.of("#/tables/0", table)
         );
 
-        assertThat(index.captionTextFor(table))
+        assertThat(index.captionTextFor(table.getCaptions()))
             .isPresent()
             .hasValue("Table 1: DocLayNet dataset overview");
     }
@@ -95,7 +95,7 @@ class DocItemIndexTest {
 
         var index = new DocItemIndex(Map.of(), Map.of("#/tables/0", table));
 
-        assertThat(index.captionTextFor(table))
+        assertThat(index.captionTextFor(table.getCaptions()))
             .isEmpty();
     }
 
@@ -158,7 +158,91 @@ class DocItemIndexTest {
 
         var index = new DocItemIndex(Map.of(), Map.of("#/tables/0", table));
 
-        assertThat(index.captionTextFor(table))
+        assertThat(index.captionTextFor(table.getCaptions()))
             .isEmpty();
+    }
+
+    @Test
+    void orphanedChildrenOfReturnsUnreferencedChildren() {
+        var parentRef = RefItem.builder().ref("#/pictures/1").build();
+
+        var child1 = TextItem.builder()
+            .selfRef("#/texts/10")
+            .label(DocItemLabel.TEXT)
+            .text("Patents")
+            .parent(parentRef)
+            .build();
+
+        var child2 = TextItem.builder()
+            .selfRef("#/texts/11")
+            .label(DocItemLabel.TEXT)
+            .text("8%")
+            .parent(parentRef)
+            .build();
+
+        var index = new DocItemIndex(
+            Map.of("#/texts/10", child1, "#/texts/11", child2),
+            Map.of()
+        );
+
+        var orphans = index.orphanedChildrenOf("#/pictures/1", Set.of());
+
+        assertThat(orphans)
+            .hasSize(2)
+            .extracting(BaseTextItem::getText)
+            .containsExactlyInAnyOrder("Patents", "8%");
+    }
+
+    @Test
+    void orphanedChildrenOfExcludesReferencedItems() {
+        var parentRef = RefItem.builder().ref("#/pictures/1").build();
+
+        var child = TextItem.builder()
+            .selfRef("#/texts/10")
+            .label(DocItemLabel.TEXT)
+            .text("Patents")
+            .parent(parentRef)
+            .build();
+
+        var index = new DocItemIndex(
+            Map.of("#/texts/10", child),
+            Map.of()
+        );
+
+        var orphans = index.orphanedChildrenOf("#/pictures/1", Set.of("#/texts/10"));
+
+        assertThat(orphans).isEmpty();
+    }
+
+    @Test
+    void orphanedChildrenOfExcludesItemsWithDifferentParent() {
+        var pictureParent = RefItem.builder().ref("#/pictures/1").build();
+        var bodyParent = RefItem.builder().ref("#/body").build();
+
+        var pictureChild = TextItem.builder()
+            .selfRef("#/texts/10")
+            .label(DocItemLabel.TEXT)
+            .text("chart label")
+            .parent(pictureParent)
+            .build();
+
+        var bodyChild = TextItem.builder()
+            .selfRef("#/texts/20")
+            .label(DocItemLabel.TEXT)
+            .text("body text")
+            .parent(bodyParent)
+            .build();
+
+        var index = new DocItemIndex(
+            Map.of("#/texts/10", pictureChild, "#/texts/20", bodyChild),
+            Map.of()
+        );
+
+        var orphans = index.orphanedChildrenOf("#/pictures/1", Set.of());
+
+        assertThat(orphans)
+            .hasSize(1)
+            .extracting(BaseTextItem::getText)
+            .containsExactly("chart label");
     }
 }

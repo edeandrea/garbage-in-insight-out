@@ -1,9 +1,11 @@
 package dev.ericdeandrea.docling.ai.ingestion.extraction;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -12,6 +14,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import ai.docling.core.DoclingDocument;
 import ai.docling.core.DoclingDocument.BaseTextItem;
 import ai.docling.core.DoclingDocument.DocItemLabel;
+import ai.docling.core.DoclingDocument.PictureItem;
 import ai.docling.core.DoclingDocument.ProvenanceItem;
 import ai.docling.core.DoclingDocument.TableItem;
 import ai.docling.serve.api.DoclingServeApi;
@@ -93,7 +96,7 @@ public class DoclingExtractor {
             .map(table -> toProvenanceEntry(
                 tableToText(table),
                 Objects.requireNonNullElse(table.getLabel(), "TABLE"),
-                index.captionTextFor(table).orElse(null),
+                index.captionTextFor(table.getCaptions()).orElse(null),
                 table.getProv(),
                 fullText));
 
@@ -128,11 +131,15 @@ public class DoclingExtractor {
         return Uni.createFrom()
             .completionStage(() -> this.doclingServeApi.chunkFilesWithHybridChunkerAsync(request, documentPath))
             .map(response -> {
-                var index = DocItemIndex.of(
-                    response.getDocuments().getFirst().getContent().getJsonContent()
-                );
+                var doclingDoc = response.getDocuments().getFirst().getContent().getJsonContent();
+                var index = DocItemIndex.of(doclingDoc);
 
-                return response.getChunks()
+                var referencedRefs = response.getChunks().stream()
+                    .filter(chunk -> (chunk.getDocItems() != null))
+                    .flatMap(chunk -> chunk.getDocItems().stream())
+                    .collect(Collectors.toSet());
+
+                var segments = new ArrayList<>(response.getChunks()
                     .stream()
                     .map(chunk -> {
                         var metadata = new Metadata()
@@ -160,7 +167,44 @@ public class DoclingExtractor {
 
                         return TextSegment.from(chunk.getText(), metadata);
                     })
-                    .toList();
+                    .toList());
+
+                doclingDoc.getPictures().stream()
+                    .map(picture -> buildPictureSegment(picture, index, referencedRefs))
+                    .flatMap(Optional::stream)
+                    .forEach(segments::add);
+
+                return segments;
             });
+    }
+
+    private Optional<TextSegment> buildPictureSegment(PictureItem picture,
+                                                       DocItemIndex index,
+                                                       Set<String> referencedRefs) {
+        var orphans = index.orphanedChildrenOf(picture.getSelfRef(), referencedRefs);
+
+        if (orphans.isEmpty()) {
+            return Optional.empty();
+        }
+
+        var captionText = index.captionTextFor(picture.getCaptions()).orElse("");
+        var orphanText = orphans.stream()
+            .map(BaseTextItem::getText)
+            .collect(Collectors.joining(" "));
+
+        var text = captionText.isEmpty() ? orphanText : "%s\n%s".formatted(captionText, orphanText);
+
+        var metadata = new Metadata()
+            .put("mode", Mode.DOCLING_HYBRID_CHUNK.name())
+            .put("element_type", "PICTURE");
+
+        if ((picture.getProv() != null) && !picture.getProv().isEmpty()) {
+            metadata.put("page_number", picture.getProv().getFirst().getPageNo());
+        }
+
+        index.captionTextFor(picture.getCaptions())
+            .ifPresent(cap -> metadata.put("element_label", cap));
+
+        return Optional.of(TextSegment.from(text, metadata));
     }
 }

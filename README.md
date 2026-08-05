@@ -150,12 +150,12 @@ The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeand
 Answer: 8%. Modes A and B answer correctly (chart text labels get
 concatenated into naive chunks). Mode C can't answer — the hybrid
 chunker doesn't include scattered chart text labels in its chunks.
-This shows a real tradeoff: hybrid chunking excels at tables but
-can miss chart/figure text data. The question "According to Figure 2,
-which document category is the largest?" shows the same pattern
-(A/B answer "Financial 32%", C can't). See
-[spec 006](specs/006-orphaned-chart-text/spec.md) for the planned
-fix. Not recommended for the demo until spec 006 is implemented.
+All three modes answer correctly (8%). Mode C retrieves a synthetic
+picture segment containing the Figure 2 chart labels — fixed by
+[spec 006](specs/006-orphaned-chart-text/spec.md) which creates
+synthetic segments from orphaned picture-children text items.
+
+![Q4 results](docs/images/q4-patents-percentage-results.png)
 
 ### Prose questions (control — all modes should answer similarly)
 
