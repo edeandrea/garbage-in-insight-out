@@ -124,5 +124,8 @@ No action needed for these.
 ## Verification
 
 1. Run tests with WireMock stubs
-2. Start the app, re-ingest, test "What percentage of DocLayNet pages
-   are Patents?" — Mode C should now answer correctly
+2. Start the app, re-ingest, test both figure questions — Mode C
+   should now answer correctly:
+   - "What percentage of DocLayNet pages are Patents?" (answer: 8%)
+   - "According to Figure 2, which document category is the largest
+     in DocLayNet?" (answer: Financial Reports at 32%)
