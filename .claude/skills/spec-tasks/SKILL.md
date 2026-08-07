@@ -1,6 +1,13 @@
 ---
-description: Break an approved plan into an ordered, checkable task list. Does not write application code.
+name: spec-tasks
+description: >-
+  Break an approved plan into an ordered, checkable task list. Does not write
+  application code.
+metadata:
+  user-invocable: true
+  disable-model-invocation: true
 ---
+
 Given a spec slug:
 
 1. Read `specs/<slug>/plan.md`. If Status is not `Approved`, stop and ask

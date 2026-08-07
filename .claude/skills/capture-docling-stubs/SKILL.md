@@ -1,6 +1,13 @@
 ---
-description: Re-capture WireMock stubs from a live Docling Serve instance. Run after upgrading Docling or changing the fixture PDF.
+name: capture-docling-stubs
+description: >-
+  Re-capture WireMock stubs from a live Docling Serve instance. Run after
+  upgrading Docling or changing the fixture PDF.
+metadata:
+  user-invocable: true
+  disable-model-invocation: true
 ---
+
 Run `CaptureDoclingResponsesTest` against a live Docling Serve instance
 to regenerate the WireMock stub files used by tests.
 

@@ -1,6 +1,13 @@
 ---
-description: Start a new feature spec through requirements gathering. Does not write application code.
+name: spec-new
+description: >-
+  Start a new feature spec through requirements gathering. Does not write
+  application code.
+metadata:
+  user-invocable: true
+  disable-model-invocation: true
 ---
+
 You are starting a new feature spec. Do not write or edit any application
 source code in this command.
 
@@ -16,5 +23,7 @@ source code in this command.
 4. Go through it yourself one more time looking for any outstanding
    questions, ambiguities, or missing requirements. If you find any, 
    ask the user for clarification 1 item at a time, and record those clarifications.
-5. Ask them to review it and either ask for changes, or
+5. Add a new entry for this spec to the `## Active specs` section of
+   `CONTEXT.md` following the format of existing entries.
+6. Ask them to review it and either ask for changes, or
    run `/spec-plan <slug>` once they've set Status to Approved.

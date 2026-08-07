@@ -1,6 +1,13 @@
 ---
-description: Turn an approved spec into a technical design. Does not write application code.
+name: spec-plan
+description: >-
+  Turn an approved spec into a technical design. Does not write application
+  code.
+metadata:
+  user-invocable: true
+  disable-model-invocation: true
 ---
+
 Given a spec slug or path:
 
 1. Read `specs/<slug>/spec.md`. If its Status is not `Approved`, stop and

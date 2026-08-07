@@ -1,6 +1,13 @@
 ---
-description: Implement an approved task list one task at a time, checking off progress as it goes.
+name: spec-implement
+description: >-
+  Implement an approved task list one task at a time, checking off progress as
+  it goes.
+metadata:
+  user-invocable: true
+  disable-model-invocation: true
 ---
+
 Given a spec slug:
 
 1. Read `specs/<slug>/tasks.md`. If Status is not `Approved`, stop and ask
@@ -21,5 +28,8 @@ Given a spec slug:
 4. Go through everything yourself one more time looking for any outstanding
    questions, ambiguities, or missing requirements. If you find any, 
    ask the user for clarification 1 item at a time, and record those clarifications.
-5. When all tasks are checked, summarize what was built and note anything
-   that deviated from the plan.
+5. When all tasks are checked, update this spec's entry in the
+   `## Active specs` section of `CONTEXT.md` to reflect
+   "Status: Approved, implemented" and the number of decisions recorded
+   (if any).
+6. Summarize what was built and note anything that deviated from the plan.

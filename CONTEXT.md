@@ -127,8 +127,21 @@ phase, on purpose, so specs survive across sessions and context resets.
   DoclingServeApi usage. Status: Approved, implemented.
 - `specs/004-chunk-metadata-enrichment/` — Fix Mode B elementLabel bug,
   enrich Mode C with elementType via includeConvertedDoc + docItems
-  cross-referencing. Status: Approved.
+  cross-referencing. Status: Approved, implemented. 12 decisions recorded.
 - `specs/005-async-docling-api/` — Switch DoclingExtractor to async
   Docling Serve API (convertFilesAsync, chunkFilesWithHybridChunkerAsync),
   make pipeline fully reactive with Uni return types.
+  Status: Approved, implemented.
+- `specs/006-orphaned-chart-text/` — Include orphaned chart/figure text
+  labels (e.g., pie chart percentages) that Docling extracts but the
+  hybrid chunker drops during chunking. Status: Approved, implemented.
+  3 decisions recorded.
+- `specs/007-right-justify-user-messages/` — Right-justify user messages
+  in chat panels following standard chat UI convention.
+  Status: Approved, implemented.
+- `specs/008-streaming-responses/` — Enable Vaadin Push so LLM responses
+  stream token-by-token to the browser instead of appearing all at once.
+  Status: Approved, implemented.
+- `specs/009-qa-round-separator/` — Add visual separators between Q&A
+  rounds in chat panels, bold speaker names, and scroll-to-highlight.
   Status: Approved, implemented.
