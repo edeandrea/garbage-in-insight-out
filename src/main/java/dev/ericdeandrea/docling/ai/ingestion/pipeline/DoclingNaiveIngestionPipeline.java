@@ -9,7 +9,7 @@ import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.smallrye.mutiny.Uni;
 
 import dev.ericdeandrea.docling.ai.ingestion.chunking.NaiveChunker;
-import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingExtractor;
+import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingNaiveExtractor;
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -22,11 +22,11 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 @ApplicationScoped
 class DoclingNaiveIngestionPipeline extends AbstractIngestionPipeline {
 
-    private final DoclingExtractor doclingExtractor;
+    private final DoclingNaiveExtractor doclingExtractor;
     private final NaiveChunker naiveChunker;
 
     DoclingNaiveIngestionPipeline(
-            DoclingExtractor doclingExtractor,
+            DoclingNaiveExtractor doclingExtractor,
             NaiveChunker naiveChunker,
             EmbeddingModel embeddingModel,
             @EmbeddingStoreName("docling-naive") EmbeddingStore<TextSegment> store) {

@@ -18,10 +18,10 @@ import dev.ericdeandrea.docling.model.Mode;
 
 @QuarkusTest
 @TestProfile(DoclingWiremockTestProfile.class)
-class DoclingHybridChunkingTest {
+class DoclingHybridExtractorTest {
 
     @Inject
-    DoclingExtractor doclingExtractor;
+    DoclingHybridExtractor doclingExtractor;
 
     @Test
     void chunksFixturePdfWithPageMetadata() {

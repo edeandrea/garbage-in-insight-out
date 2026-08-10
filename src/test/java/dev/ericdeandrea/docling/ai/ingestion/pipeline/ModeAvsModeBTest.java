@@ -11,7 +11,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import io.quarkus.test.junit.QuarkusTest;
 
 import dev.ericdeandrea.docling.ai.ingestion.chunking.NaiveChunker;
-import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingExtractor;
+import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingNaiveExtractor;
 import dev.ericdeandrea.docling.ai.ingestion.extraction.TikaExtractor;
 import dev.ericdeandrea.docling.model.Mode;
 
@@ -35,7 +35,7 @@ class ModeAvsModeBTest {
     TikaExtractor tikaExtractor;
 
     @Inject
-    DoclingExtractor doclingExtractor;
+    DoclingNaiveExtractor doclingExtractor;
 
     @Inject
     NaiveChunker naiveChunker;

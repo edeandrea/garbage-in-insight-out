@@ -14,7 +14,8 @@ import io.quarkus.test.junit.TestProfile;
 
 import dev.ericdeandrea.docling.DoclingWiremockTestProfile;
 import dev.ericdeandrea.docling.ai.ingestion.chunking.NaiveChunker;
-import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingExtractor;
+import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingHybridExtractor;
+import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingNaiveExtractor;
 import dev.ericdeandrea.docling.ai.ingestion.extraction.TikaExtractor;
 import dev.ericdeandrea.docling.model.Mode;
 
@@ -26,7 +27,10 @@ class ChunkSizeValidationTest {
     TikaExtractor tikaExtractor;
 
     @Inject
-    DoclingExtractor doclingExtractor;
+    DoclingNaiveExtractor doclingNaiveExtractor;
+
+    @Inject
+    DoclingHybridExtractor doclingHybridExtractor;
 
     @Inject
     NaiveChunker naiveChunker;
@@ -53,7 +57,7 @@ class ChunkSizeValidationTest {
 
     @Test
     void modeBTable2ValuesLackColumnHeaders() {
-        var result = doclingExtractor.extract(FIXTURE)
+        var result = doclingNaiveExtractor.extract(FIXTURE)
             .await()
             .atMost(Duration.ofMinutes(5));
         var segments = naiveChunker.chunk(result, Mode.DOCLING_NAIVE_CHUNK);
@@ -74,7 +78,7 @@ class ChunkSizeValidationTest {
 
     @Test
     void modeCTable2HasSelfDescribingValues() {
-        var segments = doclingExtractor.extractAndChunk(FIXTURE)
+        var segments = doclingHybridExtractor.extractAndChunk(FIXTURE)
             .await()
             .atMost(Duration.ofMinutes(5));
 

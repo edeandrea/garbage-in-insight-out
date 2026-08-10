@@ -11,7 +11,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import io.quarkus.test.junit.QuarkusTest;
 
-import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingExtractor;
+import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingNaiveExtractor;
 import dev.ericdeandrea.docling.ai.ingestion.extraction.ExtractionResult;
 import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 
@@ -34,7 +34,7 @@ import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 class ChunkSizeSimulationTest {
 
     @Inject
-    DoclingExtractor doclingExtractor;
+    DoclingNaiveExtractor doclingExtractor;
 
     private static final Path FIXTURE = Path.of("fixtures/doclaynet-2206.01062v1.pdf");
 

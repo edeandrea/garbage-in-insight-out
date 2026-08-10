@@ -8,7 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.smallrye.mutiny.Uni;
 
-import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingExtractor;
+import dev.ericdeandrea.docling.ai.ingestion.extraction.DoclingHybridExtractor;
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -22,10 +22,10 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 @ApplicationScoped
 class DoclingHybridIngestionPipeline extends AbstractIngestionPipeline {
 
-    private final DoclingExtractor doclingExtractor;
+    private final DoclingHybridExtractor doclingExtractor;
 
     DoclingHybridIngestionPipeline(
-            DoclingExtractor doclingExtractor,
+            DoclingHybridExtractor doclingExtractor,
             EmbeddingModel embeddingModel,
             @EmbeddingStoreName("docling-hybrid") EmbeddingStore<TextSegment> store) {
         super(embeddingModel, store);

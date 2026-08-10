@@ -16,10 +16,10 @@ import dev.ericdeandrea.docling.DoclingWiremockTestProfile;
 
 @QuarkusTest
 @TestProfile(DoclingWiremockTestProfile.class)
-class DoclingExtractorTest {
+class DoclingNaiveExtractorTest {
 
     @Inject
-    DoclingExtractor doclingExtractor;
+    DoclingNaiveExtractor doclingExtractor;
 
     @Test
     void extractsFixturePdfWithProvenance() {

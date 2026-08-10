@@ -3,137 +3,74 @@ package dev.ericdeandrea.docling.ai.ingestion.extraction;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import ai.docling.core.DoclingDocument;
 import ai.docling.core.DoclingDocument.BaseTextItem;
-import ai.docling.core.DoclingDocument.DocItemLabel;
 import ai.docling.core.DoclingDocument.PictureItem;
-import ai.docling.core.DoclingDocument.ProvenanceItem;
-import ai.docling.core.DoclingDocument.TableItem;
 import ai.docling.serve.api.DoclingServeApi;
 import ai.docling.serve.api.chunk.request.HybridChunkDocumentRequest;
-import ai.docling.serve.api.convert.request.ConvertDocumentRequest;
 import ai.docling.serve.api.convert.request.options.ConvertDocumentOptions;
 import ai.docling.serve.api.convert.request.options.OutputFormat;
-import ai.docling.serve.api.convert.response.InBodyConvertDocumentResponse;
 
 import io.smallrye.mutiny.Uni;
 
 import dev.ericdeandrea.docling.model.Mode;
-import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
 
+/**
+ * Mode C extractor: calls Docling Serve's {@code /chunk} endpoint with the hybrid chunker,
+ * which performs both extraction and structure-aware chunking server-side in a single round trip.
+ * Unlike Mode B's sentence splitter, the hybrid chunker keeps table rows as self-describing
+ * triplets (e.g., "All, FRCNN.R101 = 73.4") so the LLM can answer from a single chunk without
+ * needing to correlate headers across chunks.
+ */
 @ApplicationScoped
-public class DoclingExtractor {
-
-    private static final ConvertDocumentOptions JSON_OPTIONS = ConvertDocumentOptions.builder()
-        .toFormat(OutputFormat.JSON)
-        .build();
+public class DoclingHybridExtractor {
 
     private final DoclingServeApi doclingServeApi;
 
-    DoclingExtractor(DoclingServeApi doclingServeApi) {
+    DoclingHybridExtractor(DoclingServeApi doclingServeApi) {
         this.doclingServeApi = doclingServeApi;
     }
 
-    public Uni<ExtractionResult> extract(Path documentPath) {
-        var request = ConvertDocumentRequest.builder()
-            .options(JSON_OPTIONS)
+    /**
+     * Sends the document to Docling Serve's /chunk endpoint with the hybrid chunker, which
+     * performs extraction and structure-aware chunking in one server-side round trip. We request
+     * {@code includeConvertedDoc(true)} so the response embeds the full {@code DoclingDocument}
+     * — needed to cross-reference docItem refs for element types, resolve captions, and rescue
+     * orphaned picture text that the chunker drops.
+     *
+     * <p>Each server-side chunk is mapped to a {@link TextSegment} with mode, page, element type,
+     * and caption metadata. Orphaned picture children are then collected into synthetic PICTURE
+     * segments so chart/figure labels aren't lost.
+     */
+    public Uni<List<TextSegment>> extractAndChunk(Path documentPath) {
+        var options = ConvertDocumentOptions.builder()
+            .toFormat(OutputFormat.JSON)
             .build();
 
-        return Uni.createFrom()
-            .completionStage(() -> this.doclingServeApi.convertFilesAsync(request, documentPath))
-            .map(InBodyConvertDocumentResponse.class::cast)
-            .map(response -> response.getDocument().getJsonContent())
-            .map(doclingDoc -> {
-                var fullText = buildFullText(doclingDoc);
-                var provenance = buildProvenance(doclingDoc, fullText);
-                return new ExtractionResult(Document.from(fullText), provenance);
-            });
-    }
-
-    private String buildFullText(DoclingDocument doc) {
-        var textParts = doc.getTexts().stream()
-            .map(BaseTextItem::getText);
-
-        var tableParts = doc.getTables().stream()
-            .map(this::tableToText)
-            .filter(text -> !text.isEmpty());
-
-        return Stream.concat(textParts, tableParts)
-            .collect(Collectors.joining("\n\n"));
-    }
-
-    private String tableToText(TableItem table) {
-        return Optional.of(table.getData())
-            .map(DoclingDocument.TableData::getGrid)
-            .map(grid -> grid.stream()
-                .map(row -> row.stream()
-                    .map(cell -> Objects.requireNonNullElse(cell.getText(), ""))
-                    .collect(Collectors.joining(" | ")))
-                .collect(Collectors.joining("\n")))
-            .orElse("");
-    }
-
-    private List<ProvenanceEntry> buildProvenance(DoclingDocument doc, String fullText) {
-        var index = DocItemIndex.of(doc);
-
-        var textEntries = doc.getTexts().stream()
-            .map(item -> {
-                var elementLabel = (item.getLabel() == DocItemLabel.CAPTION) ? item.getText() : null;
-                return toProvenanceEntry(item.getText(), item.getLabel().toString(), elementLabel, item.getProv(), fullText);
-            });
-
-        var tableEntries = doc.getTables().stream()
-            .map(table -> toProvenanceEntry(
-                tableToText(table),
-                Objects.requireNonNullElse(table.getLabel(), "TABLE"),
-                index.captionTextFor(table.getCaptions()).orElse(null),
-                table.getProv(),
-                fullText));
-
-        return Stream.concat(textEntries, tableEntries)
-            .flatMap(Optional::stream)
-            .toList();
-    }
-
-    private Optional<ProvenanceEntry> toProvenanceEntry(String itemText, String elementType,
-                                                        String elementLabel,
-                                                        List<ProvenanceItem> provItems, String fullText) {
-        return Optional.ofNullable(itemText)
-            .filter(text -> !text.isEmpty())
-            .map(fullText::indexOf)
-            .filter(startChar -> (startChar >= 0))
-            .map(startChar -> {
-                var pageNumber = provItems.stream()
-                    .map(ProvenanceItem::getPageNo)
-                    .findFirst()
-                    .orElse(null);
-
-                return new ProvenanceEntry(startChar, startChar + itemText.length(), pageNumber, elementType, elementLabel);
-            });
-    }
-
-    public Uni<List<TextSegment>> extractAndChunk(Path documentPath) {
         var request = HybridChunkDocumentRequest.builder()
-            .options(JSON_OPTIONS)
+            .options(options)
             .includeConvertedDoc(true)
             .build();
 
         return Uni.createFrom()
             .completionStage(() -> this.doclingServeApi.chunkFilesWithHybridChunkerAsync(request, documentPath))
             .map(response -> {
-                var doclingDoc = response.getDocuments().getFirst().getContent().getJsonContent();
+                var doclingDoc = response.getDocuments()
+                                         .getFirst()
+                                         .getContent()
+                                         .getJsonContent();
+
                 var index = DocItemIndex.of(doclingDoc);
 
+                // Track which docItem refs the chunker already included in a chunk,
+                // so buildPictureSegment can identify the orphaned ones.
                 var referencedRefs = response.getChunks().stream()
                     .filter(chunk -> (chunk.getDocItems() != null))
                     .flatMap(chunk -> chunk.getDocItems().stream())
@@ -178,6 +115,10 @@ public class DoclingExtractor {
             });
     }
 
+    // The hybrid chunker drops text labels that are children of picture items (e.g., pie chart
+    // percentages like "Patents 8%"). This rescues those orphaned children by collecting any
+    // picture text refs not already claimed by a chunk and synthesizing a PICTURE segment,
+    // so Mode C can answer questions about figure data that would otherwise be lost.
     private Optional<TextSegment> buildPictureSegment(PictureItem picture,
                                                        DocItemIndex index,
                                                        Set<String> referencedRefs) {
