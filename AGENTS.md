@@ -48,7 +48,7 @@ When using Bob Shell, select the appropriate mode based on the task:
 ## Agent-Specific Guidelines
 
 ### For Claude (via .claude/ directory)
-- Use commands in `.claude/commands/` for structured workflows
+- Use skills in `.claude/skills/` for structured workflows
 - Follow spec-driven development: spec → plan → tasks → implement
 - Maintain specifications in `specs/` directory
 
