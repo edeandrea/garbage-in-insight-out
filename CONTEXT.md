@@ -147,4 +147,5 @@ phase, on purpose, so specs survive across sessions and context resets.
   Status: Approved, implemented.
 - `specs/010-split-docling-extractor/` — Split monolithic
   DoclingExtractor into DoclingNaiveExtractor (Mode B) and
-  DoclingHybridExtractor (Mode C). Status: Draft.
+  DoclingHybridExtractor (Mode C). Status: Approved (spec + plan).
+  3 decisions recorded.
