@@ -145,3 +145,6 @@ phase, on purpose, so specs survive across sessions and context resets.
 - `specs/009-qa-round-separator/` — Add visual separators between Q&A
   rounds in chat panels, bold speaker names, and scroll-to-highlight.
   Status: Approved, implemented.
+- `specs/010-split-docling-extractor/` — Split monolithic
+  DoclingExtractor into DoclingNaiveExtractor (Mode B) and
+  DoclingHybridExtractor (Mode C). Status: Draft.
