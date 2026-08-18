@@ -139,7 +139,24 @@ works too — still no difference."*
 
 ![Figure results](docs/images/q4-patents-percentage-results.png)
 
-### 3. Table qualitative (differentiation appears)
+### 3. Author metadata (Mode A gets it wrong)
+
+> "Who wrote the paper?"
+
+- **Mode A:** Wrong — pulls author names from the *references* section
+  instead of the paper's own author list.
+- **Mode B:** Correct but verbose — works through the extended content
+  and arXiv metadata to arrive at the answer.
+- **Mode C:** Direct and correct — the hybrid chunker retrieves the ACM
+  Reference Format block from page 1, which lists the authors front and
+  center.
+
+*"Mode A confidently gave the wrong answer — it confused cited works
+with the paper's own authors."*
+
+![Author metadata results](docs/images/q5-who-wrote-paper-results.png)
+
+### 4. Table qualitative (differentiation appears)
 
 > "What does Table 2 show, and what network architecture won overall?"
 
@@ -156,7 +173,7 @@ hand-wave."*
 
 ![Table qualitative results](docs/images/q1-table2-results.png)
 
-### 4. Table quantitative (the knockout)
+### 5. Table quantitative (the knockout)
 
 > "By how many mAP points does YOLOv5x outperform Faster R-CNN overall?"
 
