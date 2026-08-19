@@ -21,7 +21,6 @@ import dev.langchain4j.rag.content.ContentMetadata;
 
 @ApplicationScoped
 public class AssistantService {
-
     private final ChatService chatService;
     private final CurrentMode currentMode;
     private final ChunkMapper chunkMapper;

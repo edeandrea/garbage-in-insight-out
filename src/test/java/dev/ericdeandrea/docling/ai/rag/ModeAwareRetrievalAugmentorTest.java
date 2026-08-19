@@ -1,4 +1,4 @@
-package dev.ericdeandrea.docling.ai;
+package dev.ericdeandrea.docling.ai.rag;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import io.quarkus.test.junit.QuarkusTest;
 
+import dev.ericdeandrea.docling.ai.CurrentMode;
 import dev.ericdeandrea.docling.model.Mode;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.rag.AugmentationRequest;

@@ -5,15 +5,14 @@ import jakarta.enterprise.context.RequestScoped;
 import dev.ericdeandrea.docling.model.Mode;
 
 @RequestScoped
-class CurrentMode {
-
+public class CurrentMode {
     private Mode mode;
 
-    Mode mode() {
+    public Mode mode() {
         return this.mode;
     }
 
-    void mode(Mode mode) {
+    public void mode(Mode mode) {
         this.mode = mode;
     }
 }
