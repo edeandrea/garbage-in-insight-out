@@ -3,8 +3,6 @@ package dev.ericdeandrea.docling.ai.ingestion;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -13,11 +11,6 @@ import io.quarkus.arc.All;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 
-import io.qdrant.client.QdrantClient;
-import io.qdrant.client.QdrantGrpcClient;
-import io.qdrant.client.grpc.Collections.Distance;
-import io.qdrant.client.grpc.Collections.VectorParams;
-import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStoreConfig;
 import io.smallrye.mutiny.Uni;
 
 import dev.ericdeandrea.docling.ai.ingestion.pipeline.IngestionPipeline;
@@ -25,52 +18,37 @@ import dev.ericdeandrea.docling.config.DemoConfig;
 
 @ApplicationScoped
 class IngestionStartup {
-    private static final int VECTOR_SIZE = 768;
 
     private final List<IngestionPipeline> pipelines;
     private final DemoConfig demoConfig;
-    private final QdrantEmbeddingStoreConfig qdrantConfig;
 
     IngestionStartup(
             @All List<IngestionPipeline> pipelines,
-            DemoConfig demoConfig,
-            QdrantEmbeddingStoreConfig qdrantConfig) {
+            DemoConfig demoConfig) {
         this.pipelines = pipelines;
         this.demoConfig = demoConfig;
-        this.qdrantConfig = qdrantConfig;
     }
 
     void onStart(@Observes StartupEvent event) {
         var documentPath = Path.of(this.demoConfig.rag().fixturePath());
-        var defaultConfig = this.qdrantConfig.defaultConfig();
-        var host = defaultConfig.host().orElse("localhost");
-        var port = defaultConfig.port();
 
-        try (var client = new QdrantClient(
-                QdrantGrpcClient.newBuilder(host, port, false).build())) {
-            var existingCollections = client.listCollectionsAsync().get();
+        Log.infof("Starting ingestion for document: %s", documentPath);
 
-            Log.infof("Starting ingestion for document: %s", documentPath);
-
-            if (this.demoConfig.rag().ingestion().parallel()) {
-                Log.info("Running ingestion in parallel");
-                ingestParallel(documentPath, client, existingCollections);
-            }
-            else {
-                Log.info("Running ingestion sequentially");
-                ingestSequential(documentPath, client, existingCollections);
-            }
-
-            Log.info("Ingestion complete");
+        if (this.demoConfig.rag().ingestion().parallel()) {
+            Log.info("Running ingestion in parallel");
+            ingestParallel(documentPath);
         }
-        catch (ExecutionException | InterruptedException e) {
-            throw new IngestionException("Ingestion failed", e);
+        else {
+            Log.info("Running ingestion sequentially");
+            ingestSequential(documentPath);
         }
+
+        Log.info("Ingestion complete");
     }
 
-    private void ingestParallel(Path documentPath, QdrantClient client, List<String> existingCollections) {
+    private void ingestParallel(Path documentPath) {
         var unis = this.pipelines.stream()
-            .map(pipeline -> runPipeline(pipeline, documentPath, client, existingCollections))
+            .map(pipeline -> runPipeline(pipeline, documentPath))
             .toList();
 
         Uni.join()
@@ -82,49 +60,25 @@ class IngestionStartup {
             .atMost(Duration.ofMinutes(10));
     }
 
-    private void ingestSequential(Path documentPath, QdrantClient client, List<String> existingCollections) {
+    private void ingestSequential(Path documentPath) {
         this.pipelines.forEach(pipeline ->
-            runPipeline(pipeline, documentPath, client, existingCollections)
+            runPipeline(pipeline, documentPath)
                 .await()
                 .atMost(Duration.ofMinutes(10)));
     }
 
-    private Uni<Void> runPipeline(IngestionPipeline pipeline, Path documentPath,
-                                   QdrantClient client, List<String> existingCollections) {
-        var collectionName = resolveCollectionName(pipeline);
-
-        if (existingCollections.contains(collectionName)) {
-            Log.infof("%s collection '%s' already exists, skipping ingestion",
-                pipeline.mode().displayLabel(), collectionName);
+    private Uni<Void> runPipeline(IngestionPipeline pipeline, Path documentPath) {
+        if (pipeline.hasExistingData()) {
+            Log.infof("%s store '%s' already has data, skipping ingestion",
+                pipeline.mode().displayLabel(), pipeline.storeName());
             return Uni.createFrom().voidItem();
         }
 
         Log.infof("Ingesting %s...", pipeline.mode().displayLabel());
-        createCollection(client, collectionName);
 
         return pipeline.processAndStore(documentPath)
             .invoke(segments -> Log.infof("%s ingested %d segments",
                 pipeline.mode().displayLabel(), segments.size()))
             .replaceWithVoid();
-    }
-
-    private String resolveCollectionName(IngestionPipeline pipeline) {
-        return Optional.ofNullable(this.qdrantConfig.namedConfig().get(pipeline.collectionName()))
-            .map(namedConfig -> namedConfig.collection().name())
-            .orElseGet(() -> this.qdrantConfig.defaultConfig().collection().name());
-    }
-
-    private void createCollection(QdrantClient client, String collectionName) {
-        try {
-            client.createCollectionAsync(collectionName,
-                VectorParams.newBuilder()
-                    .setSize(VECTOR_SIZE)
-                    .setDistance(Distance.Cosine)
-                    .build())
-                .get();
-        }
-        catch (ExecutionException | InterruptedException e) {
-            throw new IngestionException("Failed to create Qdrant collection: %s".formatted(collectionName), e);
-        }
     }
 }

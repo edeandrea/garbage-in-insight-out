@@ -149,3 +149,8 @@ phase, on purpose, so specs survive across sessions and context resets.
   DoclingExtractor into DoclingNaiveExtractor (Mode B) and
   DoclingHybridExtractor (Mode C). Status: Approved, implemented.
   3 decisions recorded.
+- `specs/011-switch-qdrant-to-pgvector/` — Switch embedding store from
+  Qdrant back to pgvector now that quarkus-langchain4j#2690 is fixed.
+  Status: Approved, implemented. 3 decisions recorded. Pending:
+  [#2754](https://github.com/quarkiverse/quarkus-langchain4j/issues/2754)
+  for pgvector named store discovery without explicit `datasource`.

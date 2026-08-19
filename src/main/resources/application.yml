@@ -22,25 +22,21 @@ quarkus:
         temperature: 0
       embedding-model:
         model-name: nomic-embed-text
-    qdrant:
-      devservices:
-        collection:
-          vector-params:
-            size: 768
-            distance: Cosine
+    pgvector:
       default-store-enabled: false
       naive:
-        collection-name: naive
-        collection:
-          name: naive
+        # Workaround for quarkus-langchain4j#2754 — required for named store discovery
+        datasource: "<default>"
+        table: naive
+        dimension: 768
       docling-naive:
-        collection-name: docling_naive_chunk
-        collection:
-          name: docling_naive_chunk
+        datasource: "<default>"  # quarkus-langchain4j#2754
+        table: docling_naive_chunk
+        dimension: 768
       docling-hybrid:
-        collection-name: docling_hybrid_chunk
-        collection:
-          name: docling_hybrid_chunk
+        datasource: "<default>"  # quarkus-langchain4j#2754
+        table: docling_hybrid_chunk
+        dimension: 768
 
 "%dev":
   quarkus:
