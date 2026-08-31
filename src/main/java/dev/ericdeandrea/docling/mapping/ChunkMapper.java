@@ -1,7 +1,5 @@
 package dev.ericdeandrea.docling.mapping;
 
-import java.time.Instant;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
@@ -15,10 +13,10 @@ import dev.langchain4j.data.segment.TextSegment;
 public interface ChunkMapper {
 
     @Mapping(target = "text", expression = "java(segment.text())")
-    @Mapping(target = "metadata", expression = "java(toMetadata(segment, relevanceScore, timestamp))")
-    RetrievedChunk toRetrievedChunk(TextSegment segment, double relevanceScore, Instant timestamp);
+    @Mapping(target = "metadata", expression = "java(toMetadata(segment, relevanceScore))")
+    RetrievedChunk toRetrievedChunk(TextSegment segment, double relevanceScore);
 
-    default ChunkMetadata toMetadata(TextSegment segment, double relevanceScore, Instant timestamp) {
+    default ChunkMetadata toMetadata(TextSegment segment, double relevanceScore) {
         var metadata = segment.metadata();
 
         return new ChunkMetadata(
@@ -26,8 +24,7 @@ public interface ChunkMapper {
             metadata.getString("element_type"),
             metadata.getString("element_label"),
             toMode(metadata.getString("mode")),
-            relevanceScore,
-            timestamp
+            relevanceScore
         );
     }
 

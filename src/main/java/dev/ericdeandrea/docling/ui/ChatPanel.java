@@ -1,7 +1,5 @@
 package dev.ericdeandrea.docling.ui;
 
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,9 +27,6 @@ import dev.ericdeandrea.docling.model.Mode;
 class ChatPanel {
 
     private static final int MAX_COLOR_INDEX = 7;
-    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter
-        .ofPattern("MMM d, h:mm a")
-        .withZone(ZoneId.systemDefault());
 
     private final Mode mode;
     private final MessageList messageList;
@@ -105,11 +100,6 @@ class ChatPanel {
             .setHeader(headerWithTooltip("Label")).setFlexGrow(0).setWidth("90px").setResizable(true)
             .setTooltipGenerator(row -> (row.chunk().metadata().elementLabel() != null)
                 ? row.chunk().metadata().elementLabel() : "");
-        grid.addColumn(row -> (row.chunk().metadata().timestamp() != null)
-                ? TIMESTAMP_FORMAT.format(row.chunk().metadata().timestamp()) : "")
-            .setHeader(headerWithTooltip("Time")).setFlexGrow(0).setWidth("110px").setResizable(true)
-            .setTooltipGenerator(row -> (row.chunk().metadata().timestamp() != null)
-                ? TIMESTAMP_FORMAT.format(row.chunk().metadata().timestamp()) : "");
         grid.addColumn(row -> {
                 var text = row.chunk().text();
                 return (text.length() > 80) ? "%s...".formatted(text.substring(0, 80)) : text;

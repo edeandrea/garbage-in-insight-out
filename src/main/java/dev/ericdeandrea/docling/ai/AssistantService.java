@@ -1,6 +1,5 @@
 package dev.ericdeandrea.docling.ai;
 
-import java.time.Instant;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -50,7 +49,7 @@ public class AssistantService {
                         var score = (content.metadata() != null)
                             ? (Double) content.metadata().getOrDefault(ContentMetadata.SCORE, 0.0)
                             : 0.0;
-                        return this.chunkMapper.toRetrievedChunk(content.textSegment(), score, Instant.now());
+                        return this.chunkMapper.toRetrievedChunk(content.textSegment(), score);
                     })
                     .toList();
                 yield new ChunksRetrievedEvent(chunks);

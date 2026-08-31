@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -44,8 +43,8 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
     AssistantService assistantService;
 
     private static final List<RetrievedChunk> MOCK_CHUNKS = List.of(
-        new RetrievedChunk("chunk one text", new ChunkMetadata(1, "PARAGRAPH", null, Mode.NAIVE, 0.95, Instant.now())),
-        new RetrievedChunk("chunk two text", new ChunkMetadata(2, "TABLE", "Table 2", Mode.NAIVE, 0.87, Instant.now()))
+        new RetrievedChunk("chunk one text", new ChunkMetadata(1, "PARAGRAPH", null, Mode.NAIVE, 0.95)),
+        new RetrievedChunk("chunk two text", new ChunkMetadata(2, "TABLE", "Table 2", Mode.NAIVE, 0.87))
     );
 
     @BeforeEach
@@ -186,7 +185,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             .thenReturn(Multi.createFrom().items(
                 new TokenEvent("Answer two"),
                 new ChunksRetrievedEvent(List.of(
-                    new RetrievedChunk("different chunk", new ChunkMetadata(3, "PARAGRAPH", null, Mode.NAIVE, 0.9, Instant.now()))
+                    new RetrievedChunk("different chunk", new ChunkMetadata(3, "PARAGRAPH", null, Mode.NAIVE, 0.9))
                 )),
                 new CompletedEvent()
             ));
@@ -237,8 +236,8 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
 
         assertThat(grid.getColumns())
-            .as("Grid should have 6 columns (no round column)")
-            .hasSize(6);
+            .as("Grid should have 5 columns (no round column)")
+            .hasSize(5);
 
         assertThat(grid.getColumns())
             .extracting(col -> col.getHeaderText())

@@ -158,3 +158,8 @@ phase, on purpose, so specs survive across sessions and context resets.
   mode then showing it again preserves its chat + chunk history and
   LangChain4j conversation instead of destroying and recreating the panel.
   Status: Approved, implemented. 4 decisions recorded.
+- `specs/013-drop-chunk-timestamp/` — Drop the retrieved-chunks "Time"
+  column and remove the meaningless `ChunkMetadata.timestamp` field with
+  its plumbing (`Instant.now()` in `AssistantService`, the `timestamp`
+  param in `ChunkMapper`). Status: Approved, implemented. No decisions
+  recorded.

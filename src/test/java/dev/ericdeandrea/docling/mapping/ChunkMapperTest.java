@@ -2,8 +2,6 @@ package dev.ericdeandrea.docling.mapping;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Instant;
-
 import org.junit.jupiter.api.Test;
 
 import dev.ericdeandrea.docling.model.Mode;
@@ -22,9 +20,8 @@ class ChunkMapperTest {
             .put("element_label", "Table 2")
             .put("mode", "DOCLING_NAIVE_CHUNK");
         var segment = TextSegment.from("some chunk text", metadata);
-        var timestamp = Instant.now();
 
-        var result = mapper.toRetrievedChunk(segment, 0.87, timestamp);
+        var result = mapper.toRetrievedChunk(segment, 0.87);
 
         assertThat(result)
             .isNotNull()
@@ -35,7 +32,6 @@ class ChunkMapperTest {
                 assertThat(chunk.metadata().elementLabel()).isEqualTo("Table 2");
                 assertThat(chunk.metadata().mode()).isEqualTo(Mode.DOCLING_NAIVE_CHUNK);
                 assertThat(chunk.metadata().relevanceScore()).isEqualTo(0.87);
-                assertThat(chunk.metadata().timestamp()).isEqualTo(timestamp);
             });
     }
 
@@ -44,9 +40,8 @@ class ChunkMapperTest {
         var metadata = new Metadata()
             .put("mode", "NAIVE");
         var segment = TextSegment.from("garbled text from tika", metadata);
-        var timestamp = Instant.now();
 
-        var result = mapper.toRetrievedChunk(segment, 0.42, timestamp);
+        var result = mapper.toRetrievedChunk(segment, 0.42);
 
         assertThat(result)
             .isNotNull()
@@ -57,7 +52,6 @@ class ChunkMapperTest {
                 assertThat(chunk.metadata().elementLabel()).isNull();
                 assertThat(chunk.metadata().mode()).isEqualTo(Mode.NAIVE);
                 assertThat(chunk.metadata().relevanceScore()).isEqualTo(0.42);
-                assertThat(chunk.metadata().timestamp()).isEqualTo(timestamp);
             });
     }
 }
