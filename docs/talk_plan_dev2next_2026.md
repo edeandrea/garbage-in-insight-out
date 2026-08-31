@@ -16,9 +16,9 @@ then the ask.
 
 ## The document
 
-The DocLayNet paper (arXiv:2206.01062v1), a real KDD 2022 paper from IBM
-Research (Pfitzmann, Auer, Dolfi, Nassar, Staar). Chosen deliberately:
-it's a paper *about* document-layout analysis, which makes getting its
+[The DocLayNet paper (arXiv:2206.01062v1)](../fixtures/doclaynet-2206.01062v1.pdf), 
+a real KDD 2022 paper from IBM Research (Pfitzmann, Auer, Dolfi, Nassar, Staar). 
+Chosen deliberately: it's a paper *about* document-layout analysis, which makes getting its
 own layout wrong a built-in joke, and it's the same PDF Docling's own
 team already uses internally to demonstrate naive-extraction failure, so
 it's not a cherry-picked example.
