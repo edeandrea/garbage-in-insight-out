@@ -4,6 +4,7 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -125,22 +126,40 @@ public class ChatView extends VerticalLayout {
     }
 
     void toggleMode(Mode mode) {
-        if (this.panels.containsKey(mode)) {
-            var panel = this.panels.get(mode);
-            this.messageContainer.remove(panel.messageArea());
-            this.chunksContainer.remove(panel.chunksArea());
-            this.panels.remove(mode);
-            this.toggleButtons.get(mode).removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        var panel = this.panels.computeIfAbsent(mode, this::createPanel);
+        var nowVisible = !panel.messageArea().isVisible();
+
+        panel.messageArea().setVisible(nowVisible);
+        panel.chunksArea().setVisible(nowVisible);
+
+        var button = this.toggleButtons.get(mode);
+        if (nowVisible) {
+            button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         }
         else {
-            var panel = new ChatPanel(mode, this.assistantService);
-            this.panels.put(mode, panel);
-            this.messageContainer.add(panel.messageArea());
-            this.chunksContainer.add(panel.chunksArea());
-            this.toggleButtons.get(mode).addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            button.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
         }
 
         updatePanelBorders();
+    }
+
+    private ChatPanel createPanel(Mode mode) {
+        var panel = new ChatPanel(mode, this.assistantService);
+        var index = insertionIndex(mode);
+
+        this.messageContainer.addComponentAtIndex(index, panel.messageArea());
+        this.chunksContainer.addComponentAtIndex(index, panel.chunksArea());
+
+        panel.messageArea().setVisible(false);
+        panel.chunksArea().setVisible(false);
+
+        return panel;
+    }
+
+    private int insertionIndex(Mode mode) {
+        return (int) this.panels.keySet().stream()
+            .filter(m -> m.ordinal() < mode.ordinal())
+            .count();
     }
 
     private void updatePanelBorders() {
@@ -149,23 +168,28 @@ public class ChatView extends VerticalLayout {
     }
 
     private void applyBordersBetween(HorizontalLayout container) {
-        var children = container.getChildren().toList();
+        var visible = container.getChildren()
+            .filter(Component::isVisible)
+            .toList();
 
-        for (var i = 0; i < children.size(); i++) {
-            var style = children.get(i).getStyle();
+        container.getChildren().forEach(child -> {
+            var style = child.getStyle();
+            style.remove("border-inline-end");
 
-            if ((i > 0) && (children.size() >= 2)) {
+            if (visible.indexOf(child) > 0) {
                 style.set("border-inline-start", "1px solid var(--lumo-contrast-30pct)");
             }
             else {
                 style.remove("border-inline-start");
             }
-
-            style.remove("border-inline-end");
-        }
+        });
     }
 
     Map<Mode, ChatPanel> panels() {
         return this.panels;
+    }
+
+    Map<Mode, Button> toggleButtons() {
+        return this.toggleButtons;
     }
 }

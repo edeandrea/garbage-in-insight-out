@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,8 +26,10 @@ import io.quarkus.test.junit.QuarkusTest;
 import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
 
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.subscription.MultiEmitter;
 
 import dev.ericdeandrea.docling.ai.AssistantService;
+import dev.ericdeandrea.docling.model.ChatResponseEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.ChunksRetrievedEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.CompletedEvent;
 import dev.ericdeandrea.docling.model.ChatResponseEvent.TokenEvent;
@@ -301,6 +304,80 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         assertThat(hasDetails)
             .as("No Details component should exist in chunks area")
             .isFalse();
+    }
+
+    @Test
+    void historyPreservedAcrossToggle() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "test question");
+
+        assertThat(find(MessageList.class, panel.messageArea()).single().getItems())
+            .as("Chat has user + assistant messages before toggling")
+            .hasSize(2);
+        assertThat(find(Span.class, panel.chunksArea()).single().getText())
+            .isEqualTo("Retrieved Chunks (2)");
+
+        view.toggleMode(Mode.NAIVE);
+        view.toggleMode(Mode.NAIVE);
+
+        assertThat(view.panels().get(Mode.NAIVE))
+            .as("Same panel instance is reused across the toggle")
+            .isSameAs(panel);
+        assertThat(find(MessageList.class, panel.messageArea()).single().getItems())
+            .as("Chat history survives the hide/show cycle")
+            .hasSize(2);
+        assertThat(find(Span.class, panel.chunksArea()).single().getText())
+            .as("Chunk history survives the hide/show cycle")
+            .isEqualTo("Retrieved Chunks (2)");
+    }
+
+    @Test
+    void streamingContinuesWhileHidden() {
+        var emitterRef = new AtomicReference<MultiEmitter<? super ChatResponseEvent>>();
+        when(this.assistantService.chat(eq(Mode.NAIVE), any(), any()))
+            .thenReturn(Multi.createFrom().<ChatResponseEvent>emitter(emitterRef::set));
+
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "test question");
+
+        var emitter = emitterRef.get();
+        assertThat(emitter)
+            .as("Subscription established and emitter captured")
+            .isNotNull();
+
+        emitter.emit(new TokenEvent("Hello "));
+
+        view.toggleMode(Mode.NAIVE);
+
+        assertThat(panel.messageArea().isVisible())
+            .as("Panel is hidden mid-stream")
+            .isFalse();
+
+        emitter.emit(new TokenEvent("world!"));
+        emitter.emit(new ChunksRetrievedEvent(MOCK_CHUNKS));
+        emitter.complete();
+
+        view.toggleMode(Mode.NAIVE);
+
+        var assistantItem = find(MessageList.class, panel.messageArea()).single().getItems().stream()
+            .filter(item -> Mode.NAIVE.displayLabel().equals(item.getUserName()))
+            .findFirst()
+            .orElseThrow();
+
+        assertThat(assistantItem.getText())
+            .as("Tokens emitted while hidden are accumulated and shown on return")
+            .isEqualTo("Hello world!");
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+
+        assertThat(grid.getGenericDataView().getItems().toList())
+            .as("Chunks emitted while hidden are shown on return")
+            .hasSize(2);
     }
 
     private void fireSubmit(ChatPanel panel, String message) {

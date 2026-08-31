@@ -154,3 +154,7 @@ phase, on purpose, so specs survive across sessions and context resets.
   Status: Approved, implemented. 3 decisions recorded. Pending:
   [#2754](https://github.com/quarkiverse/quarkus-langchain4j/issues/2754)
   for pgvector named store discovery without explicit `datasource`.
+- `specs/012-reuse-mode-panels/` — Reuse mode panels on toggle: hiding a
+  mode then showing it again preserves its chat + chunk history and
+  LangChain4j conversation instead of destroying and recreating the panel.
+  Status: Approved, implemented. 4 decisions recorded.
