@@ -22,7 +22,7 @@ The app runs the same RAG pipeline three times, changing exactly one variable ea
 
 - Java 25 (Temurin recommended)
 - Maven 3.9+ (wrapper included: `./mvnw`)
-- Docker or Podman (for Quarkus dev services: Qdrant, PostgreSQL, Docling Serve, Ollama)
+- Docker or Podman (for Quarkus dev services: PostgreSQL, Docling Serve, Ollama)
 - Ollama with models pulled (for dev mode — dev services handle this automatically):
   - `qwen3:30b-a3b` (LLM, ~16 GB)
   - `nomic-embed-text` (embeddings, 274 MB)
@@ -35,7 +35,7 @@ The app runs the same RAG pipeline three times, changing exactly one variable ea
 ./mvnw quarkus:dev
 ```
 
-Opens at [localhost:8080](http://localhost:8080). Dev services automatically start Qdrant, Docling Serve, and Ollama containers. First startup is slow (model pulling + document ingestion).
+Opens at [localhost:8080](http://localhost:8080). Dev services automatically start PostgreSQL (pgvector), Docling Serve, and Ollama containers. First startup is slow (model pulling + document ingestion).
 
 ### Tests
 
@@ -87,8 +87,9 @@ dev.ericdeandrea.docling
 ├── ai/                           # AI service, RAG augmentor, mode selection
 │   └── ingestion/                # Ingestion orchestrator
 │       ├── extraction/           # How documents are extracted
-│       │   ├── TikaExtractor         (Mode A)
-│       │   └── DoclingExtractor      (Modes B/C)
+│       │   ├── TikaExtractor           (Mode A)
+│       │   ├── DoclingNaiveExtractor   (Mode B)
+│       │   └── DoclingHybridExtractor  (Mode C)
 │       ├── chunking/             # How text is split
 │       │   └── NaiveChunker          (Modes A/B)
 │       └── pipeline/             # Mode compositions (self-documenting)
@@ -106,10 +107,10 @@ The AI and UI layers are decoupled via the [`model`](src/main/java/dev/ericdeand
 
 - [`AssistantService`](src/main/java/dev/ericdeandrea/docling/ai/AssistantService.java) — public chat API; maps LangChain4j events to model types
 - [`ChatService`](src/main/java/dev/ericdeandrea/docling/ai/ChatService.java) — package-private `@RegisterAiService` with RAG streaming
-- [`ModeAwareRetrievalAugmentor`](src/main/java/dev/ericdeandrea/docling/ai/ModeAwareRetrievalAugmentor.java) — selects Qdrant collection per mode
+- [`ModeAwareRetrievalAugmentor`](src/main/java/dev/ericdeandrea/docling/ai/rag/ModeAwareRetrievalAugmentor.java) — selects the pgvector store per mode
 - [`IngestionStartup`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/IngestionStartup.java) — startup orchestrator, iterates over pipelines
 - [`TikaNaiveIngestionPipeline`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/pipeline/TikaNaiveIngestionPipeline.java) / [`DoclingNaiveIngestionPipeline`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/pipeline/DoclingNaiveIngestionPipeline.java) / [`DoclingHybridIngestionPipeline`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/pipeline/DoclingHybridIngestionPipeline.java) — mode pipelines
-- [`TikaExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/extraction/TikaExtractor.java) / [`DoclingExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/extraction/DoclingExtractor.java) — extraction strategies
+- [`TikaExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/extraction/TikaExtractor.java) (Mode A) / [`DoclingNaiveExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/extraction/DoclingNaiveExtractor.java) (Mode B) / [`DoclingHybridExtractor`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/extraction/DoclingHybridExtractor.java) (Mode C) — extraction strategies
 - [`NaiveChunker`](src/main/java/dev/ericdeandrea/docling/ai/ingestion/chunking/NaiveChunker.java) — sentence splitter + context enrichment
 - [`ChatView`](src/main/java/dev/ericdeandrea/docling/ui/ChatView.java) — Vaadin multi-panel layout with toggle buttons; toggling a mode hides/shows its panel (kept in fixed A→B→C order) rather than destroying it, so a mode's chat and chunk history survive being toggled off and back on
 - [`ChatPanel`](src/main/java/dev/ericdeandrea/docling/ui/ChatPanel.java) — per-mode chat + chunk display panel
@@ -199,7 +200,7 @@ is entirely in how the document was processed."*
 - **Quarkus** — runtime
 - **LangChain4j** — RAG pipeline, AI services
 - **Docling** (`quarkus-docling`) — document extraction and hybrid chunking
-- **Qdrant** — vector store (three named collections, one per mode)
+- **pgvector** — vector store (three named tables in PostgreSQL, one per mode)
 - **Vaadin** — pure-Java chat UI with streaming
 - **MapStruct** — type-safe mapping between AI and UI layers
 - **WireMock** — LLM chat stubbing in tests
