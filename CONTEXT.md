@@ -163,3 +163,7 @@ phase, on purpose, so specs survive across sessions and context resets.
   its plumbing (`Instant.now()` in `AssistantService`, the `timestamp`
   param in `ChunkMapper`). Status: Approved, implemented. No decisions
   recorded.
+- `specs/014-preserve-expanded-chunk-rows/` — Preserve each Retrieved-chunks
+  row's expanded preview independently so opening one row no longer collapses
+  others; re-clicking a row toggles just that row, highlight still fires on
+  every click. Status: Approved, implemented. 3 decisions recorded.

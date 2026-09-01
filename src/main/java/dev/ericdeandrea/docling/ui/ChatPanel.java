@@ -120,7 +120,13 @@ class ChatPanel {
 
         grid.setPartNameGenerator(row -> "round-color-%d".formatted(row.round() % MAX_COLOR_INDEX));
 
-        grid.addItemClickListener(event -> highlightMessageForRound(event.getItem().round()));
+        grid.setDetailsVisibleOnClick(false);
+
+        grid.addItemClickListener(event -> {
+            var row = event.getItem();
+            grid.setDetailsVisible(row, !grid.isDetailsVisible(row));
+            highlightMessageForRound(row.round());
+        });
 
         grid.setSizeFull();
 

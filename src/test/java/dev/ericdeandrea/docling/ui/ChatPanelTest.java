@@ -379,6 +379,147 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             .hasSize(2);
     }
 
+    @Test
+    void clickingRowExpandsDetails() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "test question");
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+        var row = grid.getGenericDataView().getItem(0);
+
+        assertThat(grid.isDetailsVisible(row))
+            .as("Row details are collapsed before any click")
+            .isFalse();
+
+        test(grid).clickRow(0);
+
+        assertThat(grid.isDetailsVisible(row))
+            .as("Clicking a collapsed row expands its details")
+            .isTrue();
+    }
+
+    @Test
+    void clickingSecondRowKeepsFirstExpanded() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "test question");
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+        var firstRow = grid.getGenericDataView().getItem(0);
+        var secondRow = grid.getGenericDataView().getItem(1);
+
+        test(grid).clickRow(0);
+        test(grid).clickRow(1);
+
+        assertThat(grid.isDetailsVisible(firstRow))
+            .as("Expanding a second row must not collapse the first")
+            .isTrue();
+        assertThat(grid.isDetailsVisible(secondRow))
+            .as("The second row is also expanded")
+            .isTrue();
+    }
+
+    @Test
+    void reclickingRowCollapsesOnlyThatRow() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "test question");
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+        var firstRow = grid.getGenericDataView().getItem(0);
+        var secondRow = grid.getGenericDataView().getItem(1);
+
+        test(grid).clickRow(0);
+        test(grid).clickRow(1);
+        test(grid).clickRow(0);
+
+        assertThat(grid.isDetailsVisible(firstRow))
+            .as("Re-clicking an expanded row collapses it")
+            .isFalse();
+        assertThat(grid.isDetailsVisible(secondRow))
+            .as("Collapsing one row leaves the other expanded")
+            .isTrue();
+    }
+
+    @Test
+    void rowClickBothExpandsAndHighlights() {
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "test question");
+
+        var assistantItem = find(MessageList.class, panel.messageArea()).single().getItems().stream()
+            .filter(item -> Mode.NAIVE.displayLabel().equals(item.getUserName()))
+            .findFirst()
+            .orElseThrow();
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+        var row = grid.getGenericDataView().getItem(0);
+
+        test(grid).clickRow(0);
+
+        assertThat(grid.isDetailsVisible(row))
+            .as("A single click expands the row")
+            .isTrue();
+        assertThat(assistantItem.hasClassName("highlighted"))
+            .as("The same click still highlights the assistant message")
+            .isTrue();
+    }
+
+    @Test
+    void expandedRowsSurviveNewResponse() {
+        when(this.assistantService.chat(eq(Mode.NAIVE), any(), eq("first question")))
+            .thenReturn(Multi.createFrom().items(
+                new TokenEvent("Answer one"),
+                new ChunksRetrievedEvent(MOCK_CHUNKS),
+                new CompletedEvent()
+            ));
+
+        when(this.assistantService.chat(eq(Mode.NAIVE), any(), eq("second question")))
+            .thenReturn(Multi.createFrom().items(
+                new TokenEvent("Answer two"),
+                new ChunksRetrievedEvent(MOCK_CHUNKS),
+                new CompletedEvent()
+            ));
+
+        var view = navigate(ChatView.class);
+        var panel = view.panels().get(Mode.NAIVE);
+
+        fireSubmit(panel, "first question");
+
+        @SuppressWarnings("unchecked")
+        var grid = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+        var firstRoundRow = grid.getGenericDataView().getItem(0);
+
+        test(grid).clickRow(0);
+
+        assertThat(grid.isDetailsVisible(firstRoundRow))
+            .as("Row is expanded after the first response")
+            .isTrue();
+
+        fireSubmit(panel, "second question");
+
+        // Re-locate the grid so Karibu's clientRoundtrip flushes the queued
+        // UI.access(addChunks) from the second response before we assert.
+        @SuppressWarnings("unchecked")
+        var gridAfter = (Grid<ChunkRow>) find(Grid.class, panel.chunksArea()).single();
+
+        assertThat(gridAfter.getGenericDataView().getItems().toList())
+            .as("Second response prepends new chunks")
+            .hasSize(4);
+        assertThat(gridAfter.isDetailsVisible(firstRoundRow))
+            .as("A row expanded in an earlier round stays expanded after a new response")
+            .isTrue();
+    }
+
     private void fireSubmit(ChatPanel panel, String message) {
         var messageInput = find(MessageInput.class, panel.messageArea()).single();
         ComponentUtil.fireEvent(messageInput, new SubmitEvent(messageInput, false, message));
