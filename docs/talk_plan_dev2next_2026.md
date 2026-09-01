@@ -25,6 +25,16 @@ it's not a cherry-picked example.
 
 ## The mechanics (apply throughout, not just once)
 
+- **Every live-demo beat gets fallback slides showing the same real, captured
+  result**, not a substitute for going live, insurance for it. The slide(s)
+  right before a live moment get a speaker-note cue: `🔴 LIVE DEMO NEXT —
+  switch to the app now`, with the exact mode and question to ask. The
+  fallback slide(s) right after get: `📌 FALLBACK for the live query above`,
+  with instructions for both cases (worked live: breeze through confirming
+  what they saw; didn't: deliver it fresh, this is now primary content).
+  This applies to every future live beat too: Act 2's verdict (Q3 again,
+  A+B) and Act 3's knockout (Q5, A+B+C) both need this same pairing when
+  those slides get built, not just Act 1's.
 - One RAG pipeline, three modes, each changing exactly one variable from
   the previous mode (Mode A: Tika + naive chunker. Mode B: Docling
   extraction + same naive chunker. Mode C: Docling extraction + Docling
@@ -65,6 +75,12 @@ it's not a cherry-picked example.
    Table 2.
 
 ## Full segment table
+
+Note: the title slide sits first in the actual file, it's what's on
+screen while the room fills before the talk starts, and the natural home
+for a swappable conference logo. The pre-tease is still your first
+*spoken* beat, the cold open, triggered by your first click forward from
+the title slide, not by the file's resting position.
 
 | # | Segment | Min | Notes |
 |---|---|---|---|
