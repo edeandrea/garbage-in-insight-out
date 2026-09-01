@@ -520,6 +520,33 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
             .isTrue();
     }
 
+    @Test
+    void previewTextKeepsFullTextForLongInput() {
+        var input = "This is a chunk preview that is deliberately much longer than the old eighty character truncation limit.";
+
+        assertThat(ChatPanel.previewText(input))
+            .as("Preview text is no longer capped at 80 characters")
+            .isEqualTo(input)
+            .doesNotContain("...");
+    }
+
+    @Test
+    void previewTextCollapsesNewlinesToSingleLine() {
+        assertThat(ChatPanel.previewText("line one\nline two\r\nline three"))
+            .as("Line breaks collapse to single spaces for a single-line preview")
+            .isEqualTo("line one line two line three")
+            .doesNotContain("\n", "\r");
+    }
+
+    @Test
+    void previewTextLeavesSingleLineUnchanged() {
+        var input = "a single line with no breaks";
+
+        assertThat(ChatPanel.previewText(input))
+            .as("Text with no line breaks is returned unchanged")
+            .isEqualTo(input);
+    }
+
     private void fireSubmit(ChatPanel panel, String message) {
         var messageInput = find(MessageInput.class, panel.messageArea()).single();
         ComponentUtil.fireEvent(messageInput, new SubmitEvent(messageInput, false, message));

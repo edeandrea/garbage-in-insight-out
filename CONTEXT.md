@@ -167,3 +167,10 @@ phase, on purpose, so specs survive across sessions and context resets.
   row's expanded preview independently so opening one row no longer collapses
   others; re-clicking a row toggles just that row, highlight still fires on
   every click. Status: Approved, implemented. 3 decisions recorded.
+- `specs/015-layout-aware-preview-truncation/` — Replace the Retrieved-chunks
+  Preview column's fixed 80-char truncation with layout-aware CSS ellipsis that
+  fills the available column width and reflows on resize; full text stays in the
+  tooltip and expanded details. Status: Approved, implemented (Preview column
+  rendered via `LitRenderer` + `.chunk-preview` CSS ellipsis; `previewText`
+  collapses newlines). 4 decisions recorded. Pending: manual drag-resize visual
+  check in a running browser (task 10).

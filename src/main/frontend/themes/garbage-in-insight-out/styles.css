@@ -32,6 +32,13 @@ vaadin-grid::part(round-color-6) {
     background-color: color-mix(in srgb, var(--vaadin-user-color-6) 15%, transparent);
 }
 
+.chunk-preview {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 vaadin-message.current-user {
     flex-direction: row-reverse;
     border-top: 1px solid var(--lumo-contrast-20pct);

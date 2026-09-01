@@ -16,6 +16,7 @@ import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 
 import dev.ericdeandrea.docling.ai.AssistantService;
@@ -100,11 +101,9 @@ class ChatPanel {
             .setHeader(headerWithTooltip("Label")).setFlexGrow(0).setWidth("90px").setResizable(true)
             .setTooltipGenerator(row -> (row.chunk().metadata().elementLabel() != null)
                 ? row.chunk().metadata().elementLabel() : "");
-        grid.addColumn(row -> {
-                var text = row.chunk().text();
-                return (text.length() > 80) ? "%s...".formatted(text.substring(0, 80)) : text;
-            })
-            .setHeader(headerWithTooltip("Preview")).setFlexGrow(1).setAutoWidth(true).setResizable(true)
+        grid.addColumn(LitRenderer.<ChunkRow>of("<span class=\"chunk-preview\">${item.preview}</span>")
+                .withProperty("preview", row -> previewText(row.chunk().text())))
+            .setHeader(headerWithTooltip("Preview")).setFlexGrow(1).setResizable(true)
             .setTooltipGenerator(row -> row.chunk().text());
 
         grid.setItemDetailsRenderer(new ComponentRenderer<>(row -> {
@@ -190,6 +189,10 @@ class ChatPanel {
         var span = new Span(text);
         span.getElement().setAttribute("title", text);
         return span;
+    }
+
+    static String previewText(String text) {
+        return text.replaceAll("\\R+", " ");
     }
 
     private void highlightMessageForRound(int round) {
