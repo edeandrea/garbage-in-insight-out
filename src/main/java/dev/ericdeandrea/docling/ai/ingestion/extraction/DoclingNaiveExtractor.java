@@ -43,17 +43,6 @@ import dev.langchain4j.data.document.parser.docling.DoclingDocumentParser;
  */
 @ApplicationScoped
 public class DoclingNaiveExtractor {
-
-    // Stateless request template: JSON output so the response carries a structured DoclingDocument.
-    // The parser injects a fresh FileSource per call (toBuilder().clearSources().source(...)), so a
-    // single shared instance is safe — only the parser, which closes over the per-call capture
-    // holder, is rebuilt per call.
-    private static final ConvertDocumentRequest CONVERT_REQUEST = ConvertDocumentRequest.builder()
-        .options(ConvertDocumentOptions.builder()
-            .toFormat(OutputFormat.JSON)
-            .build())
-        .build();
-
     private final DoclingServeApi doclingServeApi;
 
     DoclingNaiveExtractor(DoclingServeApi doclingServeApi) {
@@ -73,10 +62,15 @@ public class DoclingNaiveExtractor {
      */
     public Uni<ExtractionResult> extract(Path documentPath) {
         var doclingDocumentHolder = new AtomicReference<DoclingDocument>();
+        var request = ConvertDocumentRequest.builder()
+                    .options(ConvertDocumentOptions.builder()
+                    .toFormat(OutputFormat.JSON)
+                    .build())
+            .build();
 
         var parser = DoclingDocumentParser.builder()
             .doclingClient(this.doclingServeApi)
-            .documentRequest(CONVERT_REQUEST)
+            .documentRequest(request)
             .documentExtractor(response -> {
               // Flattens the structured DoclingDocument into the full-text Document the naive chunker sentence-splits (the
               // parser additionally tags it with document_size_bytes) and stashes the raw DoclingDocument
