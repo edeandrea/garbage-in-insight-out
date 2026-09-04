@@ -72,8 +72,7 @@ public class DoclingNaiveExtractor {
             .doclingClient(this.doclingServeApi)
             .documentRequest(request)
             .documentExtractor(response -> {
-              // Flattens the structured DoclingDocument into the full-text Document the naive chunker sentence-splits (the
-              // parser additionally tags it with document_size_bytes) and stashes the raw DoclingDocument
+              // Flattens the structured DoclingDocument into the full-text Document the naive chunker sentence-splits
               var doclingDoc = response.getDocument().getJsonContent();
               doclingDocumentHolder.set(doclingDoc);
 
