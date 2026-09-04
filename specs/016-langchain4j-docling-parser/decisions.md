@@ -92,3 +92,158 @@ only be resolved by inspecting the real `DoclingDocumentParser` / `DoclingReques
 likely need rework. The requirements (this spec) are stable and independent of the exact API, so
 they can be reviewed and approved now; design and the task list wait for 1.4.3. This supersedes the
 "spec/plan/tasks may proceed" note in Decision 3.
+
+## 6. [2026-09-04 13:10 EDT]: OQ1 resolution — hybrid API surface (Mode B parser, Mode C direct)
+
+**Question:** With the 1.4.3 blocker cleared, the real 1.20.0-beta30 API confirmed that
+`DoclingDocumentParser.parse()`/`parseAsync()` emit only a single `Document`, and the PR's
+cast-free typing is delivered *only* through the parser's typed `documentExtractor`/`chunkExtractor`
+`Function<Response, Document>` (running inside `parseAsync`). Mode B needs `Document` +
+`List<ProvenanceEntry>`; Mode C needs `List<TextSegment>`. `DoclingRequestExecutor` used standalone
+returns the supertype `ProcessedDocumentResponse`, so it yields no cast elimination on its own.
+So R3 (cast-free typing via the parser) and R5 (no functionality loss) collide in the actual API.
+How should each extractor use PR #6255?
+
+**Options considered:**
+- **A — Parser-driven both modes:** run `parseAsync()` in both; the typed extractor `Function`
+  does all mapping cast-free. Mode C's `Function` captures `List<TextSegment>` via a per-call
+  holder and returns a throwaway `Document`. Fullest PR #6255 adoption (satisfies R2+R3+R5), but
+  Mode C uses the `Function` partly as a side effect — a mild anti-pattern for a showcase demo.
+- **B — Direct + pattern matching (no parser):** keep direct client calls, replace the unchecked
+  `.class::cast` with a checked `instanceof`/`switch`. Cleanest and zero risk, but adopts none of
+  PR #6255's headline feature; fails R2/R3 as written.
+- **C — Hybrid:** Mode B through the parser (clean — `Document` is the natural convert output,
+  only provenance captured); Mode C stays a direct `chunkSourceWithHybridChunkerAsync` call with
+  pattern matching (the parser adds nothing where we don't want a `Document`).
+
+**Decision:** **Option C (hybrid).** Mode B genuinely benefits from the parser — its natural
+output *is* a `Document`, so `documentExtractor` reads the typed `InBodyConvertDocumentResponse`
+cast-free and returns the flattened full-text `Document`, with the character-level
+`List<ProvenanceEntry>` captured as the single side-channel. Mode C wants `List<TextSegment>`, not
+a `Document`; forcing it through the parser would mean using the extractor `Function` for a
+discarded-`Document` side effect, which is not clean enough for this demo. Mode C therefore calls
+`chunkSourceWithHybridChunkerAsync(HybridChunkDocumentRequest)` directly and pattern-matches the
+already-typed `ChunkDocumentResponse` (Mode C carries no unchecked cast today anyway). Consequence:
+R3's "typing provided by the parser's typed extractor `Function`s" applies to **Mode B only**; the
+spec's R3 wording is relaxed accordingly (Mode C has no unchecked cast, satisfying R3's intent by a
+different, cleaner means). This keeps each extractor idiomatic and preserves all behavior (R4, R5).
+
+## 7. [2026-09-04 13:10 EDT]: OQ2 resolution — no WireMock stub changes needed
+
+**Question:** Does adopting the parser (Mode B) / source-async calls (Mode C) require migrating the
+WireMock stub mappings from the file endpoints to the source endpoints?
+
+**Decision:** No. In docling-java 0.6.5 the current `convertFilesAsync` /
+`chunkFilesWithHybridChunkerAsync` calls are **default methods** that read the file into a base64
+`FileSource` and delegate to `convertSourceAsync` / `chunkSourceWithHybridChunkerAsync` — the same
+HTTP endpoints (`POST /v1/convert/source/async`, `POST /v1/chunk/hybrid/source/async`) the existing
+stubs map, and the same ones `DoclingDocumentParser`'s default `DoclingRequestExecutor` targets.
+Both the Mode B parser path and the Mode C direct source-async path hit these unchanged endpoints,
+so `src/test/resources/mappings/*` and `__files/*` need no changes (R8 satisfied by construction).
+
+## 8. [2026-09-04 13:10 EDT]: OQ3 resolution — quarkus-docling bean plugs into the parser directly
+
+**Question:** Is quarkus-docling's `DoclingServeApi` CDI bean accepted by
+`DoclingDocumentParser.builder().doclingClient(...)` under docling-java 0.6.5?
+
+**Decision:** Yes. `doclingClient(...)` takes `ai.docling.serve.api.DoclingServeApi` — the exact
+interface the quarkus-docling bean implements. The project compiles and all 22 extractor/chunking
+tests pass with the parser module (1.20.0-beta30) on the classpath against docling-java 0.6.5, and
+the default executor's source-async methods are present on that interface. The injected bean is
+passed straight to the parser builder for Mode B; no adapter is required.
+
+## 9. [2026-09-04 13:10 EDT]: Keep the parser's additive `document_size_bytes` metadata (Mode B)
+
+**Question:** `DoclingDocumentParser` adds a `document_size_bytes` entry to the `Document` it
+returns. Now that Mode B is parser-driven, its `ExtractionResult` `Document` inherits that key.
+Keep it, or strip it to keep Mode B's `Document` metadata byte-identical to today?
+
+**Options considered:**
+- **Keep it** — additive metadata; no functionality loss (R5); free source provenance; less code.
+- **Strip it** — explicitly remove the key post-`parseAsync` for byte-identical output.
+
+**Decision:** **Keep it.** The key is additive and harmless — it doesn't remove or alter any
+existing behavior, so R5 (no functionality loss) is satisfied, and it's a small bonus. During
+implementation, confirm no exact-match assertion in `DoclingNaiveExtractorTest` breaks on the
+extra key; adjust that assertion if needed rather than stripping the metadata.
+
+## 10. [2026-09-04 13:55 EDT]: De-scope this spec to Mode B only; defer Mode C to a follow-up
+
+**Question:** While reworking the plan, the owner set a sharper goal — *let
+`DoclingDocumentParser` do as much work as possible; keep as little Docling-specific code in the
+extractors as necessary; fork back to Mutiny via `Uni.createFrom().completionStage`*. That goal is
+a clean, unambiguous fit for Mode B (`DoclingNaiveExtractor`), whose natural output is a single
+`Document`. For Mode C (`DoclingHybridExtractor`) it re-opened the Option A-vs-C question, because
+its `List<TextSegment>` output can only come out of the parser via a discarded-`Document` +
+capture-holder workaround. Should this one spec carry both modes, or narrow?
+
+**Options considered:**
+- **Keep both modes in spec 016** — resolve Mode C's parser-vs-direct question now (reversing or
+  confirming Decision 6's Option C) and implement both extractors together.
+- **De-scope to Mode B; follow-up spec for Mode C** — implement the clean, unambiguous Mode B
+  refactor now; move Mode C (and its parser-driven-with-holder vs. direct-pattern-matched decision)
+  to a separate spec.
+
+**Decision:** **De-scope spec 016 to Mode B only.** The two extractors are independent classes with
+no forced coupling; the shared groundwork (the `pom.xml` bump, `DocItemIndex`) either applies to
+both or is untouched here. De-scoping dissolves the OQ1 Option A-vs-C tension entirely for this
+spec (it only ever existed because of Mode C's output mismatch) and lets Mode B land as a small,
+clean, well-tested change. Mode C's chunk-path adoption — parser-driven via `chunkExtractor` with a
+captured `List<TextSegment>` (Option A) vs. a direct pattern-matched `chunkSourceWithHybridChunkerAsync`
+call (Option C / Decision 6) — is deferred to a follow-up spec where it can get a proper design
+pass. **Consequence:** Decision 6's Option C selection is *parked, not final* — it becomes an input
+to the follow-up spec, not a commitment of this one. Because the scope changed materially, `spec.md`
+Status is reset to **Draft** for re-approval, and the two-mode `plan.md` (built around the now-moot
+OQ1) is removed so `/spec-plan` regenerates a fresh Mode-B-only plan on restart. The durable API
+findings from that plan survive in §7–§9 above.
+
+## 11. [2026-09-04 14:10 EDT]: OQ1 (Mode B) — carry provenance via a per-call capture holder, not `Document` metadata
+
+**Question:** `DoclingDocumentParser.parseAsync(...)` returns only a `CompletionStage<Document>`,
+but `ExtractionResult` needs `Document` **+** a character-level `List<ProvenanceEntry>`. How does
+`DoclingNaiveExtractor` get the provenance out of the parser's typed `documentExtractor`?
+
+**Options considered:**
+- **(a) Per-call capture holder.** Build the parser inside `extract(...)` closing over an
+  `AtomicReference<List<ProvenanceEntry>>`; the `documentExtractor` computes full text + provenance
+  from the typed `InBodyConvertDocumentResponse`, writes the provenance into the holder, and returns
+  `Document.from(fullText)`. The `Uni` `.map` reads the holder to assemble `ExtractionResult`.
+- **(b) Encode provenance into the returned `Document`'s `Metadata`** (optionally with an
+  `ExtractionResult(Document)` overload that reads it back). The owner proposed this as potentially
+  cleaner — the `documentExtractor` returns a fully-formed `Document` and the `Uni` pipeline just
+  reads from it.
+- **(c) Stash the whole `DoclingDocument`/typed response in the holder** and map to text+provenance
+  outside the extractor `Function` — same holder mechanics as (a), no benefit.
+
+**Investigation (why (b) is not viable):** Inspected the actual `dev.langchain4j.data.document.Metadata`
+source on the classpath. `Metadata` is **scalar-only in both directions**: `SUPPORTED_VALUE_TYPES =
+{String, UUID, Integer, Long, Float, Double}`, and **both** the `Map` constructor and
+`putAll(Map<String,Object>)` run a private `validate()` that throws `IllegalArgumentException` for
+any value whose `getClass()` isn't in that set (the `Object` value type on `putAll` is a
+compile-time convenience only). `toMap()` likewise only ever returns those scalar types. So a
+`List<ProvenanceEntry>` **cannot** be stored as-is — option (b) would require JSON-serializing the
+list to a `String` and re-parsing it. Two further costs: (1) `NaiveChunker` splits with
+`DocumentBySentenceSplitter`, which **copies document-level metadata onto every segment**, so a
+`provenance` blob would be duplicated into every chunk and persisted in pgvector unless explicitly
+`remove()`d before chunking; (2) reading provenance inside an `ExtractionResult(Document)`
+constructor would bake a JSON encoding convention into a domain record and change the meaning of the
+existing `ExtractionResult(Document)` constructor (today: "no provenance", `this(document, List.of())`).
+
+**Decision:** **Option (c) — per-call capture holder carrying the raw `DoclingDocument`.** Both (a)
+and (c) need exactly one value to cross the async boundary (the `documentExtractor` return type is
+fixed to `Document`, and everything — `DoclingDocument`, text, provenance — is computed synchronously
+in that one call, so there is no genuine multi-stage accumulation to model with a multi-field object).
+(c) is chosen over (a) because it gives the cleaner split of responsibilities: the `documentExtractor`
+becomes a **thin capture step** — `response.getDocument().getJsonContent()` → `Document.from(buildFullText(doclingDoc))`,
+stashing the raw `DoclingDocument` — with no provenance logic and no side-effecting business mapping;
+all Docling→domain mapping (`buildProvenance`) then lives in the `Uni` `.map`, co-located with the
+`ExtractionResult` assembly. The returned `Document` still carries the text and the parser's
+`document_size_bytes` (Decision 9); the `.map` reads the stashed `DoclingDocument` plus that
+`Document` to build provenance against `document.text()`. Downstream is **completely untouched**
+(`ExtractionResult`, `ProvenanceEntry`, `NaiveChunker` unchanged; no metadata pollution). The single
+mutable holder (`AtomicReference<DoclingDocument>`, built per `extract` call) is confined to the
+async bridge, and the `CompletionStage` gives the happens-before edge between the capture write and
+the `.map` read. Option (b) is rejected as above; the multi-field accumulator variant is rejected as
+over-modeling a non-staged, synchronous computation. This resolves OQ1 and unblocks plan approval.
+The `Metadata` scalar-only finding and the `DocumentBySentenceSplitter` metadata-propagation wrinkle
+are recorded here so the Mode C follow-up spec doesn't re-investigate them.

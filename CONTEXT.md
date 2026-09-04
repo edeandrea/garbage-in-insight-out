@@ -175,13 +175,17 @@ phase, on purpose, so specs survive across sessions and context resets.
   collapses newlines). 4 decisions recorded. Pending: manual drag-resize visual
   check in a running browser (task 10).
 - `specs/016-langchain4j-docling-parser/` — Adopt langchain4j PR #6255
-  (`DoclingDocumentParser` enhancements, langchain4j 1.20.0-beta30) in
-  `DoclingNaiveExtractor` (Mode B) and `DoclingHybridExtractor` (Mode C): cherry-pick
-  the typed cast-free extractor `Function`s, `DocumentRequest` templates, and
-  `DoclingRequestExecutor`/async invocation to replace the manual
-  `convertFilesAsync`/`chunkFilesWithHybridChunkerAsync` + response-cast plumbing,
-  keeping the reactive `Uni<ExtractionResult>` / `Uni<List<TextSegment>>` contracts and
-  all current behavior. Status: Approved (requirements only). 5 decisions recorded. Blocked on quarkus-docling
-  1.4.3 (docling-java 0.6.4): the blocker gates `/spec-plan` and `/spec-tasks` too (not
-  just implementation), since OQ1–OQ3 need the real 1.20.0-beta30 API at 0.6.4 to answer.
-  Requirements are stable and approvable now; design waits for 1.4.3.
+  (`DoclingDocumentParser`, langchain4j 1.20.0-beta30) in **`DoclingNaiveExtractor` (Mode B)
+  only**: route Mode B through `DoclingDocumentParser` (`.documentRequest(ConvertDocumentRequest)`
+  + typed cast-free `documentExtractor` + `parseAsync`), letting the parser own all Docling
+  plumbing (request injection, endpoint routing, async invocation, response typing, base64/stream),
+  then fork back via `Uni.createFrom().completionStage(...)`; keep the `Uni<ExtractionResult>`
+  contract and all Mode B behavior. **De-scoped 2026-09-04:** Mode C (`DoclingHybridExtractor`)
+  moved to a follow-up spec (its `List<TextSegment>` output doesn't fit the parser's single-`Document`
+  contract cleanly). Spec Status: **Draft** (reset for re-approval after de-scope). 10 decisions
+  recorded. Blocker cleared: quarkus-docling **1.4.3** (docling-java **0.6.5**) on Maven Central,
+  `pom.xml` bumped (parser pinned to 1.20.0-beta30), all extractor/chunking tests green. Findings
+  carried forward: no WireMock stub changes for Mode B (parser hits the same
+  `/v1/convert/source/async` endpoint); quarkus-docling's `DoclingServeApi` bean plugs straight
+  into `doclingClient(...)`. Open (for the restarted plan): provenance carry mechanism — capture
+  holder vs. `Document` metadata. Two-mode `plan.md` removed; `/spec-plan` to regenerate Mode-B-only.
