@@ -22,7 +22,8 @@
         <surefire-plugin.version>3.5.6</surefire-plugin.version>
         <quarkus-langchain4j.version>1.13.0</quarkus-langchain4j.version>
         <vaadin.version>25.2.6</vaadin.version>
-        <quarkus-docling.version>1.4.2</quarkus-docling.version>
+        <quarkus-docling.version>1.4.3</quarkus-docling.version>
+        <langchain4j-docling-parser.version>1.20.0-beta30</langchain4j-docling-parser.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <browserless-test.version>1.1.2</browserless-test.version>
         <quarkus-wiremock.version>1.7.0</quarkus-wiremock.version>
@@ -98,6 +99,16 @@
             <groupId>io.quarkiverse.docling</groupId>
             <artifactId>quarkus-docling</artifactId>
             <version>${quarkus-docling.version}</version>
+        </dependency>
+        <!--
+          langchain4j PR #6255 (DoclingDocumentParser enhancements) shipped in 1.20.0-beta30,
+          which is newer than the version managed by the quarkus-langchain4j BOM. Pin it here
+          until quarkus-langchain4j catches up to langchain4j 1.20.x. See spec 016.
+        -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-docling</artifactId>
+            <version>${langchain4j-docling-parser.version}</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>

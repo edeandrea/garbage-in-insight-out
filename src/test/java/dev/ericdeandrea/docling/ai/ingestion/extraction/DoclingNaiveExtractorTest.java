@@ -40,6 +40,18 @@ class DoclingNaiveExtractorTest {
     }
 
     @Test
+    void documentCarriesSizeMetadataFromParser() {
+        var result = doclingExtractor.extract(Path.of("fixtures/doclaynet-2206.01062v1.pdf"))
+            .await()
+            .atMost(Duration.ofMinutes(5));
+
+        assertThat(result.document().metadata().getInteger("document_size_bytes"))
+            .as("DoclingDocumentParser tags the returned Document with its byte size")
+            .isNotNull()
+            .isPositive();
+    }
+
+    @Test
     void tableProvenanceEntriesHaveCaptionLabel() {
         var result = doclingExtractor.extract(Path.of("fixtures/doclaynet-2206.01062v1.pdf"))
             .await()

@@ -176,16 +176,17 @@ phase, on purpose, so specs survive across sessions and context resets.
   check in a running browser (task 10).
 - `specs/016-langchain4j-docling-parser/` — Adopt langchain4j PR #6255
   (`DoclingDocumentParser`, langchain4j 1.20.0-beta30) in **`DoclingNaiveExtractor` (Mode B)
-  only**: route Mode B through `DoclingDocumentParser` (`.documentRequest(ConvertDocumentRequest)`
-  + typed cast-free `documentExtractor` + `parseAsync`), letting the parser own all Docling
-  plumbing (request injection, endpoint routing, async invocation, response typing, base64/stream),
-  then fork back via `Uni.createFrom().completionStage(...)`; keep the `Uni<ExtractionResult>`
-  contract and all Mode B behavior. **De-scoped 2026-09-04:** Mode C (`DoclingHybridExtractor`)
-  moved to a follow-up spec (its `List<TextSegment>` output doesn't fit the parser's single-`Document`
-  contract cleanly). Spec Status: **Draft** (reset for re-approval after de-scope). 10 decisions
-  recorded. Blocker cleared: quarkus-docling **1.4.3** (docling-java **0.6.5**) on Maven Central,
-  `pom.xml` bumped (parser pinned to 1.20.0-beta30), all extractor/chunking tests green. Findings
-  carried forward: no WireMock stub changes for Mode B (parser hits the same
-  `/v1/convert/source/async` endpoint); quarkus-docling's `DoclingServeApi` bean plugs straight
-  into `doclingClient(...)`. Open (for the restarted plan): provenance carry mechanism — capture
-  holder vs. `Document` metadata. Two-mode `plan.md` removed; `/spec-plan` to regenerate Mode-B-only.
+  only**: Mode B now routes through `DoclingDocumentParser` (shared `ConvertDocumentRequest`
+  constant via `.documentRequest(...)` + typed cast-free `documentExtractor` + `parseAsync`), letting
+  the parser own all Docling plumbing (request injection, endpoint routing, async invocation, response
+  typing, base64/stream); the extractor keeps only `DoclingDocument` → text/provenance mapping and
+  forks back via `Uni.createFrom().completionStage(...)`. Provenance is carried out via a per-call
+  `AtomicReference<DoclingDocument>` capture holder (Decision 11), with `buildProvenance` moved into
+  the `Uni` `.map`. `Uni<ExtractionResult>` contract and all Mode B behavior unchanged; the parser's
+  additive `document_size_bytes` metadata is kept (Decision 9). Mode C (`DoclingHybridExtractor`)
+  de-scoped to a follow-up spec. Status: **Approved, implemented.** 13 decisions recorded. quarkus-docling
+  **1.4.3** (docling-java **0.6.5**), parser pinned to 1.20.0-beta30 in `pom.xml`. No WireMock stub
+  changes for Mode B (parser hits the same `/v1/convert/source/async` endpoint). Full suite green
+  (`-Duse.wiremock.docling=true verify`, 88 tests), plus `ModeAvsModeBTest` confirmed against real
+  Docling Serve (Table 2 `76.8`/`73.4` markers intact). `pom.xml` change uncommitted per user
+  instruction.

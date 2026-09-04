@@ -247,3 +247,63 @@ the `.map` read. Option (b) is rejected as above; the multi-field accumulator va
 over-modeling a non-staged, synchronous computation. This resolves OQ1 and unblocks plan approval.
 The `Metadata` scalar-only finding and the `DocumentBySentenceSplitter` metadata-propagation wrinkle
 are recorded here so the Mode C follow-up spec doesn't re-investigate them.
+
+## 12. [2026-09-04 17:09 EDT]: Would the capture holder be a good candidate for `ScopedValue`?
+
+**Question (asked during implementation review):** The per-call holder that carries the
+`DoclingDocument` out of the parser's `documentExtractor` callback is a Java 25 codebase — would
+`ScopedValue` (JEP 506, finalized in JDK 25) be a better fit than `AtomicReference`?
+
+**Options considered:**
+- **`ScopedValue`** — bind a value at the top of a dynamic scope, readable by callees (incl.
+  `StructuredTaskScope` forks) within that scope.
+- **Keep `AtomicReference`** (per-call mutable single-slot holder).
+
+**Decision:** Keep `AtomicReference`; `ScopedValue` is the wrong tool here — in fact it is the
+anti-pattern `ScopedValue` was designed to replace. Reasons:
+- **Data flows the wrong direction.** `ScopedValue` is one-way *inward* (caller → callees): you bind
+  a *known* value before entering the scope. Our value is produced *deep inside* the parser callback
+  and must surface back *out* to the `.map` — a callee→caller rendezvous, which `ScopedValue`
+  forbids.
+- **`ScopedValue` is immutable within its scope.** There is no "set later, read back" — that mutable
+  upward-communication is exactly the `ThreadLocal` misuse JEP 506 set out to eliminate.
+- **We don't own the binding site.** To bind we'd wrap the parser call in `.where(...).run(...)`, but
+  at that point we don't have the value yet, and the parser establishes its own async stages
+  (`supplyAsync` → `requestExecutor.execute` → `thenApply`); we can't guarantee the read happens
+  inside our dynamic scope.
+- **No safety gain.** The `CompletionStage` returned by `parseAsync` already provides the
+  happens-before edge; `AtomicReference` adds safe publication on top. `ScopedValue` would add
+  nothing.
+
+**Note:** `ScopedValue` *would* fit the inverse problem — threading request context (correlation id,
+source `Path`, tenant) *into* the parser callbacks without extra parameters. Filed as a mental note,
+not a need today.
+
+## 13. [2026-09-04 17:09 EDT]: Is any `java.util.concurrent` utility better than `AtomicReference` for the holder?
+
+**Question (asked during implementation review):** Setting `ScopedValue` aside, is there a better
+`java.util.concurrent` type for carrying the `DoclingDocument` out of the callback?
+
+**What the slot needs:** written exactly once (in `documentExtractor`), read exactly once (in
+`.map`), no concurrent writers, no CAS/retry, with a happens-before edge already supplied by the
+parser's `CompletionStage`. i.e. a *single-slot carrier with safe publication* — nothing more.
+
+**Options considered (all rejected in favor of `AtomicReference`):**
+- **`CompletableFuture<DoclingDocument>`** — reading it means `.join()`, a **blocking** call that
+  violates the reactive conventions (R6) and can trip Quarkus's event-loop blocking detection; it
+  also just duplicates the `CompletionStage` the parser already returns. Strictly worse.
+- **`Exchanger` / `SynchronousQueue`** — thread-*rendezvous* primitives where both sides block until
+  they meet; we have produce-then-consume across a happens-before edge, not two threads meeting.
+  Introduces blocking for no reason.
+- **`BlockingQueue` / `CountDownLatch` / `Phaser`** — synchronization aids or multi-value channels; a
+  latch/phaser doesn't even carry a value. Wrong shape.
+- **`T[] holder = new T[1]` / plain mutable field** — lighter, but relies entirely on the
+  `CompletionStage` edge for visibility with nothing self-documenting, and reads worse. Not an
+  improvement.
+
+**Decision:** Keep `AtomicReference` — it is the canonical single-slot carrier with safe publication;
+we simply don't exercise its CAS ops. The only thing that would genuinely beat it is *not needing a
+side channel at all*, which is blocked by the parser API: `documentExtractor` is
+`Function<InBodyConvertDocumentResponse, Document>`, so only one value can ride its return and we need
+two (`Document` + the structured `DoclingDocument` for provenance). Given that constraint, a per-call
+holder is required (Decision 11 / OQ1 option c) and `AtomicReference` is the cleanest holder for it.

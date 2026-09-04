@@ -1,13 +1,21 @@
 package dev.ericdeandrea.docling.ai.ingestion.extraction;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.enterprise.context.ApplicationScoped;
+
+import io.quarkus.logging.Log;
 
 import ai.docling.core.DoclingDocument;
 import ai.docling.core.DoclingDocument.BaseTextItem;
@@ -18,20 +26,33 @@ import ai.docling.serve.api.DoclingServeApi;
 import ai.docling.serve.api.convert.request.ConvertDocumentRequest;
 import ai.docling.serve.api.convert.request.options.ConvertDocumentOptions;
 import ai.docling.serve.api.convert.request.options.OutputFormat;
-import ai.docling.serve.api.convert.response.InBodyConvertDocumentResponse;
 
 import io.smallrye.mutiny.Uni;
 
 import dev.langchain4j.data.document.Document;
+import dev.langchain4j.data.document.parser.docling.DoclingDocumentParser;
 
 /**
- * Mode B extractor: calls Docling Serve's {@code /convert} endpoint to get a structured
- * {@link DoclingDocument}, then assembles a single continuous text and character-level
- * provenance so the downstream {@link dev.ericdeandrea.docling.ai.ingestion.chunking.NaiveChunker}
- * can attach page/element metadata to each sentence-split chunk.
+ * Mode B extractor: routes the document through langchain4j's {@link DoclingDocumentParser}, which
+ * owns all Docling Serve plumbing — base64/stream handling, request injection, endpoint routing to
+ * {@code POST /v1/convert/source/async}, async invocation, and cast-free response typing — and hands
+ * back a {@link Document}. The extractor keeps only the Docling-specific mapping: flattening the
+ * {@link DoclingDocument} into a single continuous text and building character-level provenance so
+ * the downstream {@link dev.ericdeandrea.docling.ai.ingestion.chunking.NaiveChunker} can attach
+ * page/element metadata to each sentence-split chunk.
  */
 @ApplicationScoped
 public class DoclingNaiveExtractor {
+
+    // Stateless request template: JSON output so the response carries a structured DoclingDocument.
+    // The parser injects a fresh FileSource per call (toBuilder().clearSources().source(...)), so a
+    // single shared instance is safe — only the parser, which closes over the per-call capture
+    // holder, is rebuilt per call.
+    private static final ConvertDocumentRequest CONVERT_REQUEST = ConvertDocumentRequest.builder()
+        .options(ConvertDocumentOptions.builder()
+            .toFormat(OutputFormat.JSON)
+            .build())
+        .build();
 
     private final DoclingServeApi doclingServeApi;
 
@@ -40,30 +61,53 @@ public class DoclingNaiveExtractor {
     }
 
     /**
-     * Sends the document to Docling Serve's /convert endpoint, which returns a structured
-     * {@link ai.docling.core.DoclingDocument} with classified elements (headings, paragraphs,
-     * tables, captions). We flatten that into a single continuous text for the naive chunker
-     * and build character-level provenance so each sentence-split chunk can inherit its
-     * source element's page number and type.
+     * Parses the document via {@link DoclingDocumentParser} and assembles an {@link ExtractionResult}.
+     *
+     * <p>The parser's {@code documentExtractor} returns only a {@link Document}, but
+     * {@code ExtractionResult} also needs a {@code List<ProvenanceEntry>} side-channel. Since the raw
+     * {@link DoclingDocument} is available only inside that callback, a per-call
+     * {@link AtomicReference} captures it so the {@code Uni} chain can build provenance downstream,
+     * co-located with {@code ExtractionResult} assembly. The {@link CompletionStage} returned by
+     * {@code parseAsync} supplies the happens-before edge between the capture write and the
+     * {@code .map} read.
      */
     public Uni<ExtractionResult> extract(Path documentPath) {
-        var options = ConvertDocumentOptions.builder()
-            .toFormat(OutputFormat.JSON)
-            .build();
+        var doclingDocumentHolder = new AtomicReference<DoclingDocument>();
 
-        var request = ConvertDocumentRequest.builder()
-            .options(options)
+        var parser = DoclingDocumentParser.builder()
+            .doclingClient(this.doclingServeApi)
+            .documentRequest(CONVERT_REQUEST)
+            .documentExtractor(response -> {
+              // Flattens the structured DoclingDocument into the full-text Document the naive chunker sentence-splits (the
+              // parser additionally tags it with document_size_bytes) and stashes the raw DoclingDocument
+              var doclingDoc = response.getDocument().getJsonContent();
+              doclingDocumentHolder.set(doclingDoc);
+
+              return Document.from(buildFullText(doclingDoc));
+            })
             .build();
 
         return Uni.createFrom()
-            .completionStage(() -> this.doclingServeApi.convertFilesAsync(request, documentPath))
-            .map(InBodyConvertDocumentResponse.class::cast)
-            .map(response -> response.getDocument().getJsonContent())
-            .map(doclingDoc -> {
-                var fullText = buildFullText(doclingDoc);
-                var provenance = buildProvenance(doclingDoc, fullText);
-                return new ExtractionResult(Document.from(fullText), provenance);
-            });
+            .completionStage(() -> {
+              try {
+                var in = Files.newInputStream(documentPath);
+                return parser.parseAsync(in)
+                             .whenComplete((_, _) -> closeQuietly(in));
+              }
+              catch (IOException e) {
+                throw new UncheckedIOException("Failed to open %s".formatted(documentPath), e);
+              }
+            })
+            .map(document -> new ExtractionResult(document, buildProvenance(doclingDocumentHolder.get(), document.text())));
+    }
+
+    private static void closeQuietly(InputStream in) {
+        try {
+            in.close();
+        }
+        catch (IOException e) {
+            Log.warn("Failed to close document input stream", e);
+        }
     }
 
     // Docling returns structured items (paragraphs, headings, tables), but the naive chunker
