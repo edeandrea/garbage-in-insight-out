@@ -64,8 +64,8 @@ public class DoclingNaiveExtractor {
         var doclingDocumentHolder = new AtomicReference<DoclingDocument>();
         var request = ConvertDocumentRequest.builder()
                     .options(ConvertDocumentOptions.builder()
-                    .toFormat(OutputFormat.JSON)
-                    .build())
+                      .toFormat(OutputFormat.JSON)
+                      .build())
             .build();
 
         var parser = DoclingDocumentParser.builder()
