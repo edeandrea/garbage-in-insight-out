@@ -2,7 +2,6 @@ package dev.ericdeandrea.docling.ai.ingestion.extraction;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,6 +27,7 @@ import ai.docling.serve.api.convert.request.options.ConvertDocumentOptions;
 import ai.docling.serve.api.convert.request.options.OutputFormat;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.unchecked.Unchecked;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.parser.docling.DoclingDocumentParser;
@@ -88,16 +88,11 @@ public class DoclingNaiveExtractor {
             .build();
 
         return Uni.createFrom()
-            .completionStage(() -> {
-              try {
+            .completionStage(Unchecked.supplier(() -> {
                 var in = Files.newInputStream(documentPath);
                 return parser.parseAsync(in)
                              .whenComplete((_, _) -> closeQuietly(in));
-              }
-              catch (IOException e) {
-                throw new UncheckedIOException("Failed to open %s".formatted(documentPath), e);
-              }
-            })
+            }))
             .map(document -> new ExtractionResult(document, buildProvenance(doclingDocumentHolder.get(), document.text())));
     }
 

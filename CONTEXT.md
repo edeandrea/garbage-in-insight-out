@@ -183,10 +183,11 @@ phase, on purpose, so specs survive across sessions and context resets.
   forks back via `Uni.createFrom().completionStage(...)`. Provenance is carried out via a per-call
   `AtomicReference<DoclingDocument>` capture holder (Decision 11), with `buildProvenance` moved into
   the `Uni` `.map`. `Uni<ExtractionResult>` contract and all Mode B behavior unchanged; the parser's
-  additive `document_size_bytes` metadata is kept (Decision 9). Mode C (`DoclingHybridExtractor`)
-  de-scoped to a follow-up spec. Status: **Approved, implemented.** 13 decisions recorded. quarkus-docling
+  additive `document_size_bytes` metadata is kept (Decision 9). The `completionStage` bridge lifts the
+  checked `IOException` from `Files.newInputStream(...)` via Mutiny's `Unchecked.supplier(...)` rather
+  than a manual `try/catch`→`UncheckedIOException` (Decision 14). Mode C (`DoclingHybridExtractor`)
+  de-scoped to a follow-up spec. Status: **Approved, implemented.** 14 decisions recorded. quarkus-docling
   **1.4.3** (docling-java **0.6.5**), parser pinned to 1.20.0-beta30 in `pom.xml`. No WireMock stub
   changes for Mode B (parser hits the same `/v1/convert/source/async` endpoint). Full suite green
   (`-Duse.wiremock.docling=true verify`, 88 tests), plus `ModeAvsModeBTest` confirmed against real
-  Docling Serve (Table 2 `76.8`/`73.4` markers intact). `pom.xml` change uncommitted per user
-  instruction.
+  Docling Serve (Table 2 `76.8`/`73.4` markers intact). Committed and pushed (`74e2d9b`).

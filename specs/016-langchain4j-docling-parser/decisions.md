@@ -307,3 +307,26 @@ side channel at all*, which is blocked by the parser API: `documentExtractor` is
 `Function<InBodyConvertDocumentResponse, Document>`, so only one value can ride its return and we need
 two (`Document` + the structured `DoclingDocument` for provenance). Given that constraint, a per-call
 holder is required (Decision 11 / OQ1 option c) and `AtomicReference` is the cleanest holder for it.
+
+## 14. [2026-09-04 17:23 EDT]: Bridge the checked `IOException` with Mutiny's `Unchecked.supplier`, not a manual `try/catch`
+
+**Question (post-implementation refinement):** The `Uni.createFrom().completionStage(...)` bridge
+opens `Files.newInputStream(documentPath)`, which throws a checked `IOException`. The first
+implementation wrapped the supplier body in a `try/catch` that rethrew as `java.io.UncheckedIOException`
+("Failed to open %s"). Is there a cleaner way to surface that failure into the `Uni`?
+
+**Options considered:**
+- **Manual `try/catch` → `UncheckedIOException`.** Explicit, but adds five lines of boilerplate, a
+  second exception type, and an extra import purely to satisfy the `Supplier` functional-interface
+  signature (which forbids checked throws).
+- **Mutiny `io.smallrye.mutiny.unchecked.Unchecked.supplier(...)`.** Wraps a supplier that is allowed
+  to throw a checked exception; Mutiny catches it and routes it into the `Uni` failure channel, so the
+  body can call `Files.newInputStream(...)` and simply let `IOException` propagate. Removes the
+  `try/catch`, the `UncheckedIOException` wrap, and its import.
+
+**Decision:** Use `Unchecked.supplier(...)`. It is the idiomatic Mutiny way to lift a checked-throwing
+supplier into a `Uni`, keeps the failure on the reactive failure channel (same observable behavior —
+the `Uni` fails), and leaves the bridge body as just the open + `parseAsync` + `whenComplete` close.
+Net: `java.io.UncheckedIOException` import dropped, `io.smallrye.mutiny.unchecked.Unchecked` added.
+This is the shape Mode C (spec 017) mirrors (its R6). No behavior change; existing Mode B tests stay
+green.
