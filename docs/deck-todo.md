@@ -267,8 +267,11 @@ Status key: `[ ]` open · `[~]` triaged/verified real · `[x]` done · `[-]` dro
     hollow circle / tofu — like the slide 37 URL, LO can't confirm this).
   Applies to 29/30/31/32 only (NOT 28). Mechanical → Sonnet on go.
 
-- [~] **Slides 21→22 — kill the bottom-left footer "jump" on transition.
-  DECIDED (mirror S21 footer on S22).** S21 footer = `[DoclingLogo]
+- [-] **[superseded by round 8] Slides 21→22 — kill the bottom-left footer
+  "jump" on transition. DECIDED (mirror S21 footer on S22).** Moot: the
+  restructure removed old slide 22; the docling-java payoff is now its own
+  slide 23 inheriting the master footer, so there's no bespoke footer cluster
+  to pin. S21 footer = `[DoclingLogo]
   [DoclingQR][DoclingURL]` from x=0.459. S22 dropped the small footer logo
   (it became the hero on the right), so its QR+URL slid one slot left and up
   → the high-contrast QR square visibly hops on transition. Pin S22's footer
@@ -516,3 +519,48 @@ XML + full-res render crops of slides 17/22/29/34):
   and 10.5pt overflows. Optional: add a one-line note to that talk-plan bullet
   that slide 26 runs at 9.5pt for density. Lines 61-68 (chunker-unchanged framing)
   remain consistent, no change needed. Low priority.
+
+## Captured — round 8 (2026-09-04, "Meet Docling" section-break restructure)
+
+- [x] **Slides 21-23 — restructure the Docling intro into a BJUACM-style
+  big-logo section break. DONE + VERIFIED (2026-09-04).** Eric wasn't happy
+  with the old text-heavy slide 22 ("The Java Champion problem"). Modeled the
+  new flow on BJUACM slides 5-6 (big centered logos as section breaks). Deck is
+  now 38 slides.
+  - **Slide 21 ("Meet Docling") — unchanged.**
+  - **NEW slide 22 (the setup) — Docling + Python logos, pure side-by-side.**
+    Two logos, equal weight, no on-slide text. Docling orange-duck
+    (`DoclingLogoBig`) on the left, Python (`PythonLogoBig`) on the right.
+    The "Java Champion problem" copy (last time I checked, I'm a Java Champion;
+    it gets cold in Colorado, Java devs shouldn't be left out in it) moved to
+    **speaker notes** — narrated, not shown.
+  - **NEW slide 23 (the payoff) — docling-java mascot** (duck + Duke,
+    `image30.png`, 2048² square) centered as the hero, with the QR + URL
+    (`docling-project.github.io/docling-java`) + footer logo cluster along the
+    bottom. Credibility line ("the official Java integration, one of the
+    project's own listed key repositories, not a scrappy side fork") moved to
+    **speaker notes**. Built by repurposing the old slide 22 shell (kept its
+    mascot + QR/URL/footer cluster) rather than rebuilding from scratch.
+  - **Old text-heavy slide 22 removed entirely** (its mascot art became the
+    slide-23 payoff).
+  - **Footer:** both new slides inherit the standard social footer (@edeandrea
+    + 4 icons + bottom-left bug) from the MASTER automatically (showMasterSp
+    unset), so no per-slide footer shapes were added.
+  - **Alignment fix (slide 22):** the two logos first rendered vertically
+    misaligned. Two layered causes: (1) LibreOffice refused to upscale the tiny
+    269×326 Python PNG (rendered native, top-anchored) — fixed with a 3× LANCZOS
+    upscale; (2) the real cause: the Python PNG carried a drop shadow padding its
+    bottom, so frame-centering pushed the visible snakes optically high vs the
+    shadowless duck. Fixed by cropping BOTH logos to solid artwork (alpha>200
+    bbox), removing shadow/padding, then placing at equal height, equal centerY.
+  - **Final sizing (Eric approved):** slide 22 logos 3.3in tall, centerY 2.90,
+    centerX 2.90 (duck) / 7.10 (python); slide 23 mascot 4.2in (hero), centered
+    x 5.00 / y 2.72, clear of the QR/URL/footer cluster. Verified at 150dpi
+    render, confirmed visually.
+  - **Doc reconcile:** talk plan beat 7a notes updated to describe the
+    three-slide section-break sequence + narrated Java Champion copy.
+  - Backup: `garbage-in-insight-out.bak.pptx` (pre-edit).
+  - **STILL OWED (Eric):** open + resave in PowerPoint to normalize.
+  - **Supersedes** the round-2 "Slides 21→22 footer jump" and the earlier
+    batch-1 "Slide 22 logo as hero" items below — that slide no longer exists;
+    the payoff logo now lives on its own slide 23 with the master footer.

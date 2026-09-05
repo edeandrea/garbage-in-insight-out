@@ -122,7 +122,7 @@ the title slide, not by the file's resting position.
 | 5d | Stakes coda: Vegetative Electron Microscopy | 4 | Spoken beat + simple text slide or original mockup, not a screenshot of the actual retracted paper. Present the column-misread origin as one contested theory, not settled fact |
 | 6 | Interlude: why not just a bigger LLM/VLM | 5 | Cost, latency, privacy |
 | **Act 2: Mode B (Docling extraction)** ||||
-| 7a | Twist + Docling Java origin story + license/OSS+SaaS aside | 3 | |
+| 7a | Twist + Docling Java origin story + license/OSS+SaaS aside | 3 | Three-slide section-break sequence (BJUACM-style big-logo breaks): "Meet Docling" → Docling + Python logos side by side (the setup: it all lives in Python) → docling-java payoff logo (the resolution). The "Java Champion problem" text (last time I checked, I'm a Java Champion; Java devs shouldn't be left out in the cold) is now narrated, not on-slide |
 | 7b | Design: what changed | 3 | Extractor only, same chunker, conceptual |
 | 7c | **Live**: Q3 again, A+B side by side | 3 | The verdict |
 | 7d | Code: Docling extractor swap | 4 | |
