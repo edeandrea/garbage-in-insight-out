@@ -463,3 +463,56 @@ XML + full-res render crops of slides 17/22/29/34):
   `✗ couldn't   ✓ answered   ✓✓ answered with grounded evidence (page / table / scores)`.
   Verified via render: clear gap below "mAP difference" row, no collision with
   footer logo or social icons.
+
+## Captured — round 7 (2026-09-04, spec 016 parser-swap reconcile)
+
+- [x] **Slide 26 (`DoclingNaiveExtractor`) — rebuild code block for the
+  langchain4j `DoclingDocumentParser` architecture. DONE + VERIFIED (2026-09-04).**
+  Spec 016 refactored Mode B to route through langchain4j's
+  `DoclingDocumentParser` (see the demo repo `specs/016-langchain4j-docling-parser/`);
+  the old slide showed a direct `doclingServeApi.convertFilesAsync(...)` call that
+  no longer exists. Replaced the entire `CodeBlock` with the new method
+  (Eric-supplied body, verbatim), keeping the **full package/class/method
+  scaffolding** like the sibling code slides (15/16/33):
+  - **Scaffolding kept:** `package` line (blue keyword + gray path, 6pt after),
+    `public class DoclingNaiveExtractor {`, blank, `  public Uni<ExtractionResult>
+    extract(Path documentPath) {`, body at 4-space indent, `  }` / `}` closers.
+    The `doclingDocumentHolder` and `request` declarations are referenced but not
+    shown (elided, matching Eric's pasted body).
+  - **Highlighting — green reserved for LangChain4j types ONLY** on this slide:
+    `DoclingDocumentParser` and `Document` are green `7CB342`; `Uni`, `Unchecked`,
+    `Files`, `ExtractionResult` intentionally stay default `212121` (departs from
+    the deck-wide "all type names green" rule so the work that moved into the
+    library pops). Keywords blue (`package`/`public class`/`public`/`var`/`this`/
+    `return`/`new`); the two-line flatten comment gray `757575` bold-italic.
+  - **Font: 9.5pt (code) / 8.5pt (comment).** Full scaffolding + the parser body
+    is 27 lines; at the deck's standard 10.5pt it overflows off the slide (only
+    9.5pt fits, verified by rendering both). Eric chose 9.5pt-full-body over
+    trimming the body to hold 10.5pt. NOTE: this makes slide 26 the one code slide
+    at 9.5pt (siblings 15/16/33 are 10.5pt) — a deliberate fit tradeoff.
+  - **Fit / geometry:** 27 paragraphs at 1.0 line spacing; CodeBlock off y 900000
+    -> 660000, ext cy 3400000 -> 3990000 (bottom 4650000 = 5.085in). Caption
+    shrunk to 9.5pt and moved to y 4700000 / cy 400000 (bottom 5.577in, clear of
+    the 5.625in slide edge). Both closing braces inside the box, caption clear
+    below.
+  - **rPr order:** all 48 runs schema-valid (`solidFill` before `latin`), 0 order
+    bugs, so PowerPoint honors the greens (LibreOffice renders leniently, verified
+    by XML parse not just render).
+  - **Caption reduced to one line:** line 2 removed; the remaining line 1
+    (`buildFullText() and buildProvenance() do the real work here.`) restored to
+    its original 11pt (single line has room). The parser-centric point is carried
+    by the code + the spoken track.
+  - No em-dashes (per [[avoid-em-dashes]]).
+  - VERIFIED at 150dpi render (from canonical) + programmatic XML/color check.
+  - Backup: `garbage-in-insight-out.bak.pptx` (pre-edit).
+  - **STILL OWED (Eric):** open + resave in PowerPoint to normalize, and eyeball
+    the greens render correctly in PowerPoint (LibreOffice can't confirm color
+    fidelity given its lenient rPr handling).
+
+- [ ] **Doc reconcile — slide 26 code font is 9.5pt, not the sibling 10.5pt.**
+  `talk_plan_dev2next_2026.md:50-60` (package-line convention) is now HONORED
+  again (package line restored). The only remaining divergence is font size:
+  slide 26 is 9.5pt because full scaffolding + the longer parser body is 27 lines
+  and 10.5pt overflows. Optional: add a one-line note to that talk-plan bullet
+  that slide 26 runs at 9.5pt for density. Lines 61-68 (chunker-unchanged framing)
+  remain consistent, no change needed. Low priority.

@@ -54,3 +54,4 @@ easy-rag-embeddings.json
 /.mcp.json
 /.bob/.bob-errors/
 /.bob/notes/
+/docs/*.bak*
