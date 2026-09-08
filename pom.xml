@@ -20,7 +20,7 @@
 
         <compiler-plugin.version>3.15.0</compiler-plugin.version>
         <surefire-plugin.version>3.6.0</surefire-plugin.version>
-        <quarkus-langchain4j.version>1.13.0</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>1.13.1</quarkus-langchain4j.version>
         <vaadin.version>25.2.6</vaadin.version>
         <quarkus-docling.version>1.4.3</quarkus-docling.version>
         <langchain4j-docling-parser.version>1.20.0-beta30</langchain4j-docling-parser.version>
