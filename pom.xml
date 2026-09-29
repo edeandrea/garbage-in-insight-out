@@ -25,7 +25,7 @@
         <quarkus-docling.version>1.4.3</quarkus-docling.version>
         <langchain4j-docling-parser.version>1.20.1-beta30</langchain4j-docling-parser.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <browserless-test.version>1.1.2</browserless-test.version>
+        <browserless-test.version>25.3.0</browserless-test.version>
         <quarkus-wiremock.version>1.7.0</quarkus-wiremock.version>
         <assertj.version>3.27.7</assertj.version>
     </properties>
