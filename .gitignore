@@ -55,3 +55,7 @@ easy-rag-embeddings.json
 /.bob/.bob-errors/
 /.bob/notes/
 /docs/*.bak*
+docs/~*
+
+.explyt/
+
