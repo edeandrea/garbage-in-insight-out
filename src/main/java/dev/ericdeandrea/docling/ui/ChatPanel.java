@@ -80,6 +80,10 @@ class ChatPanel {
         return this.chunksArea;
     }
 
+    Span chunksHeader() {
+        return this.chunksHeader;
+    }
+
     private Grid<ChunkRow> createChunksGrid() {
         var grid = new Grid<>(ChunkRow.class, false);
 

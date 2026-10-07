@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageInput.SubmitEvent;
 import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.server.VaadinSession;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -286,7 +286,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
 
         fireSubmit(panel, "test question");
 
-        var header = find(Span.class, panel.chunksArea()).single();
+        var header = panel.chunksHeader();
 
         assertThat(header.getText())
             .isEqualTo("Retrieved Chunks (2)");
@@ -315,7 +315,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         assertThat(find(MessageList.class, panel.messageArea()).single().getItems())
             .as("Chat has user + assistant messages before toggling")
             .hasSize(2);
-        assertThat(find(Span.class, panel.chunksArea()).single().getText())
+        assertThat(panel.chunksHeader().getText())
             .isEqualTo("Retrieved Chunks (2)");
 
         view.toggleMode(Mode.NAIVE);
@@ -327,7 +327,7 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
         assertThat(find(MessageList.class, panel.messageArea()).single().getItems())
             .as("Chat history survives the hide/show cycle")
             .hasSize(2);
-        assertThat(find(Span.class, panel.chunksArea()).single().getText())
+        assertThat(panel.chunksHeader().getText())
             .as("Chunk history survives the hide/show cycle")
             .isEqualTo("Retrieved Chunks (2)");
     }
@@ -550,5 +550,11 @@ class ChatPanelTest extends QuarkusBrowserlessTest {
     private void fireSubmit(ChatPanel panel, String message) {
         var messageInput = find(MessageInput.class, panel.messageArea()).single();
         ComponentUtil.fireEvent(messageInput, new SubmitEvent(messageInput, false, message));
+
+        // The assistant response is delivered asynchronously through UI.access(),
+        // so flush the pending UI tasks before asserting on the resulting state
+        var session = VaadinSession.getCurrent();
+        session.getService().runPendingAccessTasks(session);
+        roundTrip();
     }
 }
