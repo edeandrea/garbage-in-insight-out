@@ -72,7 +72,7 @@ public class ChatView extends VerticalLayout {
         title.addClassNames(Whitespace.NOWRAP, Margin.NONE);
         title.getStyle().set("font-size", "var(--lumo-font-size-xl)");
 
-        var themeToggle = new Button(VaadinIcon.ADJUST.create(), _ -> toggleTheme());
+        var themeToggle = new Button(VaadinIcon.CONTRAST.create(), _ -> toggleTheme());
         themeToggle.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         themeToggle.setTooltipText("Toggle light/dark mode");
 
