@@ -38,6 +38,13 @@ quarkus:
         table: docling_hybrid_chunk
         dimension: 768
 
+"%dev,test":
+  quarkus:
+    docling:
+      # The effective default async-timeout is 1m (it inherits quarkus.docling.timeout),
+      # which a cold Docling Serve container can exceed on the first hybrid-chunk request
+      async-timeout: 5m
+
 "%dev":
   quarkus:
     langchain4j:
