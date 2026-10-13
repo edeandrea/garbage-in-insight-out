@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkus.logging.Log;
+import io.quarkus.runtime.LaunchMode;
 
 import ai.docling.core.DoclingDocument;
 import ai.docling.core.DoclingDocument.BaseTextItem;
@@ -31,6 +32,7 @@ import io.smallrye.mutiny.unchecked.Unchecked;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.parser.docling.DoclingDocumentParser;
+import dev.langchain4j.data.document.parser.docling.DoclingRequestExecutor;
 
 /**
  * Mode B extractor: routes the document through langchain4j's {@link DoclingDocumentParser}, which
@@ -44,9 +46,11 @@ import dev.langchain4j.data.document.parser.docling.DoclingDocumentParser;
 @ApplicationScoped
 public class DoclingNaiveExtractor {
     private final DoclingServeApi doclingServeApi;
+    private final boolean isDevMode;
 
-    DoclingNaiveExtractor(DoclingServeApi doclingServeApi) {
+    DoclingNaiveExtractor(DoclingServeApi doclingServeApi, LaunchMode launchMode) {
         this.doclingServeApi = doclingServeApi;
+        this.isDevMode = (launchMode == LaunchMode.DEVELOPMENT);
     }
 
     /**
@@ -68,7 +72,7 @@ public class DoclingNaiveExtractor {
                       .build())
             .build();
 
-        var parser = DoclingDocumentParser.builder()
+        var parserBuilder = DoclingDocumentParser.builder()
             .doclingClient(this.doclingServeApi)
             .documentRequest(request)
             .documentExtractor(response -> {
@@ -77,8 +81,13 @@ public class DoclingNaiveExtractor {
               doclingDocumentHolder.set(doclingDoc);
 
               return Document.from(buildFullText(doclingDoc));
-            })
-            .build();
+            });
+
+        if (this.isDevMode) {
+            parserBuilder.requestExecutor(classLoaderRestoringExecutor(Thread.currentThread().getContextClassLoader()));
+        }
+
+        var parser = parserBuilder.build();
 
         return Uni.createFrom()
             .completionStage(Unchecked.supplier(() -> {
@@ -87,6 +96,25 @@ public class DoclingNaiveExtractor {
                              .whenComplete((_, _) -> closeQuietly(in));
             }))
             .map(document -> new ExtractionResult(document, buildProvenance(doclingDocumentHolder.get(), document.text())));
+    }
+
+    // parseAsync invokes the request executor on a common ForkJoinPool thread. In dev mode those threads
+    // (and any worker threads they spawn) carry the JDK app classloader instead of Quarkus's runtime
+    // classloader, so the lazily-created Docling client fails its TCCL-based lookups (CDI, config, SPI).
+    // Restoring the caller's classloader around the call sidesteps that until the parser accepts an Executor.
+    static DoclingRequestExecutor classLoaderRestoringExecutor(ClassLoader classLoader) {
+        return (client, preparedRequest) -> {
+            var thread = Thread.currentThread();
+            var previousClassLoader = thread.getContextClassLoader();
+            thread.setContextClassLoader(classLoader);
+
+            try {
+                return client.convertSourceAsync((ConvertDocumentRequest) preparedRequest);
+            }
+            finally {
+                thread.setContextClassLoader(previousClassLoader);
+            }
+        };
     }
 
     private static void closeQuietly(InputStream in) {

@@ -330,3 +330,41 @@ the `Uni` fails), and leaves the bridge body as just the open + `parseAsync` + `
 Net: `java.io.UncheckedIOException` import dropped, `io.smallrye.mutiny.unchecked.Unchecked` added.
 This is the shape Mode C (spec 017) mirrors (its R6). No behavior change; existing Mode B tests stay
 green.
+
+## 15. [2026-10-11 20:55 EDT]: Dev mode fails on Mode B — restore the caller's classloader via a dev-only `DoclingRequestExecutor`
+
+**Question (post-implementation regression):** `quarkus:dev` fails to start ever since this spec
+landed (`74e2d9b`); the test suite stays green. Errors vary between dependency versions
+(`ClassNotFoundException: QuarkusDoclingServeClient` / `ApiMetadata`,
+`ServiceConfigurationError: QuarkusConfigFactory not a subtype`) but all originate in Mode B's
+`DoclingDocumentParser.parseAsync`. Bisected in dev mode: `74e2d9b^` ✅, `74e2d9b` ❌, so the later
+Quarkus 3.40.1 / quarkus-docling 1.5.0 / parser 1.22.0-beta32 bump only changed *which* lookup fails
+first.
+
+**Root cause (confirmed by logging thread + TCCL in dev mode):** `parseAsync` runs
+`CompletableFuture.supplyAsync(...)` with no executor, so it invokes the `DoclingRequestExecutor` on a
+common ForkJoinPool thread whose TCCL is the JDK `AppClassLoader`, not the Quarkus runtime
+classloader. Quarkus's `ForkJoinClassLoading` only fixes the common-pool threads that exist at startup;
+workers the JDK creates later get the JDK default. The lazily-created Docling client beans then fail
+TCCL-based lookups (Arc `Class.forName`, `ConfigProvider`, `ServiceLoader`).
+
+**Options considered:**
+- **Hop to a Quarkus pool inside a custom `DoclingRequestExecutor`** (`ManagedExecutor`,
+  `Infrastructure.getDefaultWorkerPool()`, `Infrastructure.getDefaultExecutor()`). Tried all three in
+  dev mode; all failed. `JBossThreadFactory` doesn't set a TCCL, so the worker thread spawned by the
+  submit from the ForkJoin thread inherits its `AppClassLoader` (logged `executor-thread-1
+  tccl=AppClassLoader`).
+- **Eagerly create the Docling client at startup.** Fragile: the REST client still performs TCCL-based
+  lookups per call (the pre-bump failure was on `ApiMetadata`).
+- **Custom common-pool thread factory via `-Djava.util.concurrent.ForkJoinPool.common.threadFactory`.**
+  Must load from the system classpath and can't know the per-reload runtime classloader.
+- **Upstream: let `DoclingDocumentParser` accept an `Executor`** for its `supplyAsync`. The real fix,
+  but needs a langchain4j release.
+- **Capture the caller's TCCL in `extract()` and restore it around `convertSourceAsync` via a custom
+  `DoclingRequestExecutor`, gated to dev mode** (`LaunchMode.DEVELOPMENT`, constructor-injected).
+
+**Decision:** The dev-mode-gated classloader-restoring `DoclingRequestExecutor`
+(`DoclingNaiveExtractor.classLoaderRestoringExecutor`). Test/prod keep the parser's default executor
+(and its built-in request validation). Covered by `ClassLoaderRestoringExecutorTest` (TCCL set during
+the call, restored afterwards, including on failure); dev-mode startup verified manually (ingestion
+completes). Remove once the parser accepts an `Executor`.

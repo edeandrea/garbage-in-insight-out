@@ -564,3 +564,12 @@ XML + full-res render crops of slides 17/22/29/34):
   - **Supersedes** the round-2 "Slides 21→22 footer jump" and the earlier
     batch-1 "Slide 22 logo as hero" items below — that slide no longer exists;
     the payoff logo now lives on its own slide 23 with the master footer.
+
+## Captured — round 9 (2026-10-11, spec 016 Decision 15 dev-mode workaround)
+
+- [x] **Slide 26 (`DoclingNaiveExtractor`) — deliberately NOT updated.** Spec 016
+  Decision 15 added a dev-mode-only classloader-restoring `DoclingRequestExecutor`
+  (the builder chain now ends in `parserBuilder` + an `if (isDevMode)` branch). Eric
+  chose to leave that out of the slide: it's a dev-mode workaround for a ForkJoinPool
+  classloader issue, not part of the story. Keep slide 26 showing the plain
+  `DoclingDocumentParser.builder()...build()` chain; do not "reconcile" it with the code.

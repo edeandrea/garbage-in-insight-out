@@ -195,3 +195,7 @@ phase, on purpose, so specs survive across sessions and context resets.
   changes for Mode B (parser hits the same `/v1/convert/source/async` endpoint). Full suite green
   (`-Duse.wiremock.docling=true verify`, 88 tests), plus `ModeAvsModeBTest` confirmed against real
   Docling Serve (Table 2 `76.8`/`73.4` markers intact). Committed and pushed (`74e2d9b`).
+  Decision 15 (2026-10-11): `parseAsync` runs on common ForkJoinPool threads that carry the JDK
+  `AppClassLoader` in dev mode, which broke `quarkus:dev` startup; a dev-mode-only (`LaunchMode`)
+  `DoclingRequestExecutor` restores the caller's TCCL around `convertSourceAsync` until the parser
+  accepts an `Executor`.
