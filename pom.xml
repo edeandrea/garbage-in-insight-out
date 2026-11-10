@@ -21,7 +21,7 @@
         <compiler-plugin.version>3.16.0</compiler-plugin.version>
         <surefire-plugin.version>3.6.1</surefire-plugin.version>
         <quarkus-langchain4j.version>1.15.0</quarkus-langchain4j.version>
-        <vaadin.version>25.3.4</vaadin.version>
+        <vaadin.version>25.3.5</vaadin.version>
         <quarkus-docling.version>1.5.1</quarkus-docling.version>
         <langchain4j-docling-parser.version>1.23.0-beta33</langchain4j-docling-parser.version>
         <mapstruct.version>1.6.3</mapstruct.version>
